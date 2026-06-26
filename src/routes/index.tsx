@@ -26,13 +26,51 @@ const GRADE_POINTS: Record<string, number> = {
 };
 const GRADES = Object.keys(GRADE_POINTS);
 
-const SCHEDULE = [
-  { day: "Mon", label: "Seminar", time: "09:00 – 10:30", tone: "rind" },
-  { day: "Tue", label: "Self study", time: "14:00 – 16:00", tone: "muted" },
-  { day: "Wed", label: "Lecture", time: "11:00 – 12:30", tone: "balm" },
-  { day: "Thu", label: "Reading", time: "—", tone: "muted" },
-  { day: "Fri", label: "Lab", time: "15:00 – 17:00", tone: "rind" },
-] as const;
+type ScheduleEvent = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  label: string;
+  time: string;
+  tone: "rind" | "balm" | "muted";
+};
+
+const toISO = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const startOfWeek = (d: Date) => {
+  const x = new Date(d);
+  const dow = (x.getDay() + 6) % 7; // Monday = 0
+  x.setDate(x.getDate() - dow);
+  x.setHours(0, 0, 0, 0);
+  return x;
+};
+
+const addDays = (d: Date, n: number) => {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+};
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const seedEvents = (): ScheduleEvent[] => {
+  const wk = startOfWeek(new Date());
+  return [
+    { id: "s1", date: toISO(addDays(wk, 0)), label: "Seminar", time: "09:00 – 10:30", tone: "rind" },
+    { id: "s2", date: toISO(addDays(wk, 1)), label: "Self study", time: "14:00 – 16:00", tone: "muted" },
+    { id: "s3", date: toISO(addDays(wk, 2)), label: "Lecture", time: "11:00 – 12:30", tone: "balm" },
+    { id: "s4", date: toISO(addDays(wk, 3)), label: "Reading", time: "—", tone: "muted" },
+    { id: "s5", date: toISO(addDays(wk, 4)), label: "Lab", time: "15:00 – 17:00", tone: "rind" },
+  ];
+};
 
 function formatClock(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60);
@@ -79,6 +117,43 @@ function Index() {
   const changeFocus = (delta: number) => {
     setFocusMinutes((m) => Math.max(5, Math.min(120, m + delta)));
   };
+
+  // Schedule -----------------------------------------------------------
+  const [events, setEvents] = useState<ScheduleEvent[]>(() => seedEvents());
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [monthCursor, setMonthCursor] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const addEvent = (date: string, label: string, time: string, tone: ScheduleEvent["tone"] = "balm") => {
+    const trimmed = label.trim();
+    if (!trimmed) return;
+    setEvents((es) => [
+      ...es,
+      { id: crypto.randomUUID(), date, label: trimmed, time: time.trim() || "—", tone },
+    ]);
+  };
+  const removeEvent = (id: string) =>
+    setEvents((es) => es.filter((e) => e.id !== id));
+
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, ScheduleEvent[]>();
+    for (const e of events) {
+      const arr = map.get(e.date) ?? [];
+      arr.push(e);
+      map.set(e.date, arr);
+    }
+    return map;
+  }, [events]);
+
+  const weekDates = useMemo(() => {
+    const wk = startOfWeek(new Date());
+    return Array.from({ length: 7 }, (_, i) => addDays(wk, i));
+  }, []);
+
 
   // GPA -----------------------------------------------------------------
   const [courses, setCourses] = useState<Course[]>([
@@ -391,40 +466,43 @@ function Index() {
             </section>
 
             <section>
-              <h2 className="mb-6 font-serif text-lg font-medium">Weekly Overview</h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                {SCHEDULE.map((s) => {
-                  const tones: Record<string, string> = {
-                    rind: "bg-rind/8 border-l-2 border-rind",
-                    balm: "bg-balm/15 border-l-2 border-balm",
-                    muted: "bg-cream border-l-2 border-transparent",
-                  };
-                  const labelTone: Record<string, string> = {
-                    rind: "text-rind",
-                    balm: "text-ink",
-                    muted: "text-husk",
-                  };
-                  return (
-                    <div key={s.day} className="space-y-2">
-                      <span className="block text-[10px] font-medium uppercase tracking-[0.2em] text-husk">
-                        {s.day}
-                      </span>
-                      <div className={`h-24 rounded-lg p-3 ${tones[s.tone]}`}>
-                        <p
-                          className={`text-[11px] font-semibold uppercase tracking-wide ${labelTone[s.tone]}`}
-                        >
-                          {s.label}
-                        </p>
-                        <p className="mt-1 text-xs font-medium text-ink/80">{s.time}</p>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="mb-6 flex items-end justify-between gap-4">
+                <div>
+                  <h2 className="font-serif text-lg font-medium">Weekly Overview</h2>
+                  <p className="mt-1 text-xs text-husk">
+                    {weekDates[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} –{" "}
+                    {weekDates[6].toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCalendarOpen(true)}
+                  className="rounded-full bg-ink px-4 py-2 text-xs font-medium uppercase tracking-[0.16em] text-paper transition hover:bg-rind"
+                >
+                  Open month
+                </button>
               </div>
+              <WeeklyGrid
+                weekDates={weekDates}
+                eventsByDate={eventsByDate}
+                onRemove={removeEvent}
+                onAdd={addEvent}
+              />
             </section>
           </div>
         </div>
+
+        {calendarOpen && (
+          <MonthCalendar
+            cursor={monthCursor}
+            setCursor={setMonthCursor}
+            eventsByDate={eventsByDate}
+            onClose={() => setCalendarOpen(false)}
+            onAdd={addEvent}
+            onRemove={removeEvent}
+          />
+        )}
       </main>
+
 
       <footer className="mx-auto max-w-7xl border-t border-border px-6 py-10">
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
@@ -461,16 +539,21 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
         <div className="-mt-1 h-2 w-24 rounded-sm bg-rind/80" />
       </div>
 
-      {/* Beaker pouring chemical liquid — only when working */}
+      {/* Beaker pouring chemical liquid — only when working.
+          Beaker is offset to the right and tilted away from the tube,
+          so only its spout overhangs and feeds the balm below. */}
       {working && (
         <div
-          className="pointer-events-none absolute left-1/2 -top-2 z-20"
-          style={{ animation: "beaker-tilt 4s ease-in-out infinite" }}
+          className="pointer-events-none absolute left-[58%] -top-3 z-20"
+          style={{
+            animation: "beaker-tilt 4s ease-in-out infinite",
+            transformOrigin: "10% 90%",
+          }}
         >
-          <svg width="92" height="78" viewBox="0 0 92 78" fill="none" aria-hidden>
-            {/* Steam wisps */}
+          <svg width="110" height="86" viewBox="0 0 110 86" fill="none" aria-hidden>
+            {/* Steam wisps rising off the tilted body */}
             <path
-              d="M30 6 Q34 -2 38 6 T46 6"
+              d="M58 8 Q62 0 66 8 T74 8"
               stroke="oklch(0.78 0.04 60)"
               strokeWidth="1.5"
               strokeLinecap="round"
@@ -479,7 +562,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               style={{ animation: "steam 2.2s ease-in-out infinite" }}
             />
             <path
-              d="M48 10 Q52 2 56 10"
+              d="M74 12 Q78 4 82 12"
               stroke="oklch(0.78 0.04 60)"
               strokeWidth="1.5"
               strokeLinecap="round"
@@ -488,8 +571,9 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               style={{ animation: "steam 2.6s ease-in-out 0.4s infinite" }}
             />
 
-            {/* Beaker body (tilted right via group rotate) */}
-            <g transform="translate(8 18) rotate(38 30 28)">
+            {/* Beaker body — tilted strongly to the RIGHT (away from the tube on its left).
+                Spout is on the LEFT side so liquid still pours toward the tube. */}
+            <g transform="translate(20 14) rotate(48 30 32)">
               {/* glass outline */}
               <path
                 d="M6 4 H54 V10 L48 56 Q46 64 38 64 H22 Q14 64 12 56 L6 10 Z"
@@ -505,19 +589,19 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               />
               {/* surface meniscus */}
               <ellipse cx="30" cy="22" rx="21" ry="3" fill="oklch(0.82 0.16 60)" />
-              {/* tick marks */}
+              {/* tick marks on the upright side */}
               <line x1="46" y1="32" x2="50" y2="32" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
               <line x1="47" y1="42" x2="50" y2="42" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
-              {/* spout lip */}
+              {/* spout lip on the LEFT — the side facing the tube */}
               <path d="M6 4 Q2 6 4 12" stroke="oklch(0.55 0.18 38)" strokeWidth="2" fill="none" strokeLinecap="round" />
               {/* glass highlight */}
               <rect x="12" y="14" width="2" height="38" rx="1" fill="white" opacity="0.55" />
             </g>
           </svg>
 
-          {/* Chemical stream from beaker spout into tube */}
+          {/* Chemical stream from beaker spout down into the tube */}
           <div
-            className="absolute left-[18px] top-[42px] h-14 w-[5px] rounded-full"
+            className="absolute -left-[6px] top-[54px] h-12 w-[5px] rounded-full"
             style={{
               background:
                 "linear-gradient(180deg, oklch(0.85 0.16 65) 0%, oklch(0.7 0.18 50) 100%)",
@@ -528,7 +612,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
           />
           {/* falling droplet */}
           <div
-            className="absolute left-[16px] top-[42px] size-[7px] rounded-full bg-zest"
+            className="absolute -left-[8px] top-[54px] size-[7px] rounded-full bg-zest"
             style={{
               boxShadow: "0 0 6px oklch(0.82 0.16 60 / 0.7)",
               animation: "droplet 0.9s linear infinite",
@@ -536,6 +620,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
           />
         </div>
       )}
+
 
       {/* Tube body */}
       <div
@@ -595,3 +680,307 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
   );
 }
 
+
+const TONE_BG: Record<string, string> = {
+  rind: "bg-rind/10 border-l-2 border-rind",
+  balm: "bg-balm/20 border-l-2 border-balm",
+  muted: "bg-cream border-l-2 border-husk/30",
+};
+const TONE_LABEL: Record<string, string> = {
+  rind: "text-rind",
+  balm: "text-ink",
+  muted: "text-husk",
+};
+
+function WeeklyGrid({
+  weekDates,
+  eventsByDate,
+  onRemove,
+  onAdd,
+}: {
+  weekDates: Date[];
+  eventsByDate: Map<string, ScheduleEvent[]>;
+  onRemove: (id: string) => void;
+  onAdd: (date: string, label: string, time: string, tone?: ScheduleEvent["tone"]) => void;
+}) {
+  const todayISO = toISO(new Date());
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      {weekDates.map((d, i) => {
+        const iso = toISO(d);
+        const dayEvents = eventsByDate.get(iso) ?? [];
+        const isToday = iso === todayISO;
+        return (
+          <div key={iso} className="space-y-2">
+            <div className="flex items-baseline justify-between">
+              <span
+                className={`block text-[10px] font-medium uppercase tracking-[0.2em] ${
+                  isToday ? "text-rind" : "text-husk"
+                }`}
+              >
+                {DOW_LABELS[i]}
+              </span>
+              <span className={`font-serif text-sm ${isToday ? "text-rind" : "text-ink/70"}`}>
+                {d.getDate()}
+              </span>
+            </div>
+            <div
+              className={`min-h-28 space-y-1.5 rounded-lg p-2 ring-1 ring-border ${
+                isToday ? "bg-paper" : "bg-cream/50"
+              }`}
+            >
+              {dayEvents.map((e) => (
+                <div
+                  key={e.id}
+                  className={`group relative rounded p-2 ${TONE_BG[e.tone]}`}
+                >
+                  <p className={`text-[11px] font-semibold uppercase tracking-wide ${TONE_LABEL[e.tone]}`}>
+                    {e.label}
+                  </p>
+                  <p className="mt-0.5 text-[11px] font-medium text-ink/70">{e.time}</p>
+                  <button
+                    onClick={() => onRemove(e.id)}
+                    className="absolute right-1 top-1 text-[10px] text-husk opacity-0 transition group-hover:opacity-100 hover:text-rind"
+                    aria-label="Remove event"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <QuickAddEvent date={iso} onAdd={onAdd} compact />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function QuickAddEvent({
+  date,
+  onAdd,
+  compact,
+}: {
+  date: string;
+  onAdd: (date: string, label: string, time: string, tone?: ScheduleEvent["tone"]) => void;
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState("");
+  const [time, setTime] = useState("");
+  const [tone, setTone] = useState<ScheduleEvent["tone"]>("balm");
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className={`flex w-full items-center justify-center gap-1 rounded border border-dashed border-husk/30 py-1 text-[11px] text-husk transition hover:border-rind hover:text-rind ${
+          compact ? "" : "py-2"
+        }`}
+      >
+        + Task
+      </button>
+    );
+  }
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onAdd(date, label, time, tone);
+        setLabel("");
+        setTime("");
+        setOpen(false);
+      }}
+      className="space-y-1.5 rounded border border-rind/30 bg-paper p-2"
+    >
+      <input
+        autoFocus
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        placeholder="Task"
+        className="w-full rounded bg-cream/60 px-2 py-1 text-[11px] text-ink placeholder:text-husk focus:outline-none"
+      />
+      <input
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
+        placeholder="Time"
+        className="w-full rounded bg-cream/60 px-2 py-1 text-[11px] text-ink placeholder:text-husk focus:outline-none"
+      />
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex gap-1">
+          {(["rind", "balm", "muted"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTone(t)}
+              className={`size-3.5 rounded-full ring-1 ring-border transition ${
+                tone === t ? "ring-2 ring-ink" : ""
+              } ${t === "rind" ? "bg-rind" : t === "balm" ? "bg-balm" : "bg-husk/40"}`}
+              aria-label={`Tone ${t}`}
+            />
+          ))}
+        </div>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="rounded px-2 py-0.5 text-[10px] text-husk hover:text-rind"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="rounded bg-rind px-2 py-0.5 text-[10px] font-medium text-paper hover:opacity-90"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function MonthCalendar({
+  cursor,
+  setCursor,
+  eventsByDate,
+  onClose,
+  onAdd,
+  onRemove,
+}: {
+  cursor: Date;
+  setCursor: (d: Date) => void;
+  eventsByDate: Map<string, ScheduleEvent[]>;
+  onClose: () => void;
+  onAdd: (date: string, label: string, time: string, tone?: ScheduleEvent["tone"]) => void;
+  onRemove: (id: string) => void;
+}) {
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+  const firstOfMonth = new Date(year, month, 1);
+  const gridStart = startOfWeek(firstOfMonth);
+  const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  const todayISO = toISO(new Date());
+
+  const goMonth = (delta: number) => {
+    const d = new Date(year, month + delta, 1);
+    setCursor(d);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-paper ring-1 ring-border"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
+          <div className="flex items-center gap-3">
+            <h2 className="font-serif text-2xl font-medium">
+              {MONTHS[month]} <span className="text-husk">{year}</span>
+            </h2>
+            <div className="flex items-center gap-1 rounded-full bg-cream p-1 ring-1 ring-border">
+              <button
+                onClick={() => goMonth(-1)}
+                className="grid size-7 place-items-center rounded-full text-husk hover:bg-rind/10 hover:text-rind"
+                aria-label="Previous month"
+              >
+                ‹
+              </button>
+              <button
+                onClick={() => {
+                  const d = new Date();
+                  d.setDate(1);
+                  d.setHours(0, 0, 0, 0);
+                  setCursor(d);
+                }}
+                className="rounded-full px-3 py-0.5 text-[11px] font-medium uppercase tracking-[0.16em] text-husk hover:text-rind"
+              >
+                Today
+              </button>
+              <button
+                onClick={() => goMonth(1)}
+                className="grid size-7 place-items-center rounded-full text-husk hover:bg-rind/10 hover:text-rind"
+                aria-label="Next month"
+              >
+                ›
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid size-9 place-items-center rounded-full bg-cream text-husk hover:bg-rind/10 hover:text-rind"
+            aria-label="Close calendar"
+          >
+            ✕
+          </button>
+        </header>
+
+        <div className="grid grid-cols-7 border-b border-border bg-cream/50">
+          {DOW_LABELS.map((d) => (
+            <div
+              key={d}
+              className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.18em] text-husk"
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid flex-1 grid-cols-7 overflow-y-auto">
+          {cells.map((d, i) => {
+            const iso = toISO(d);
+            const inMonth = d.getMonth() === month;
+            const isToday = iso === todayISO;
+            const dayEvents = eventsByDate.get(iso) ?? [];
+            return (
+              <div
+                key={iso + i}
+                className={`min-h-[120px] border-b border-r border-border p-2 ${
+                  inMonth ? "bg-paper" : "bg-cream/30"
+                }`}
+              >
+                <div className="mb-1 flex items-center justify-between">
+                  <span
+                    className={`font-serif text-sm ${
+                      isToday
+                        ? "grid size-6 place-items-center rounded-full bg-rind text-paper"
+                        : inMonth
+                        ? "text-ink"
+                        : "text-husk/50"
+                    }`}
+                  >
+                    {d.getDate()}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {dayEvents.map((e) => (
+                    <div
+                      key={e.id}
+                      className={`group relative rounded px-1.5 py-1 ${TONE_BG[e.tone]}`}
+                    >
+                      <p className={`truncate text-[10px] font-semibold uppercase tracking-wide ${TONE_LABEL[e.tone]}`}>
+                        {e.label}
+                      </p>
+                      <p className="text-[10px] text-ink/60">{e.time}</p>
+                      <button
+                        onClick={() => onRemove(e.id)}
+                        className="absolute right-0.5 top-0.5 text-[9px] text-husk opacity-0 transition group-hover:opacity-100 hover:text-rind"
+                        aria-label="Remove event"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {inMonth && <QuickAddEvent date={iso} onAdd={onAdd} compact />}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
