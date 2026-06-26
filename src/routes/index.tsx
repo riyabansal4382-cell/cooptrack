@@ -26,13 +26,51 @@ const GRADE_POINTS: Record<string, number> = {
 };
 const GRADES = Object.keys(GRADE_POINTS);
 
-const SCHEDULE = [
-  { day: "Mon", label: "Seminar", time: "09:00 – 10:30", tone: "rind" },
-  { day: "Tue", label: "Self study", time: "14:00 – 16:00", tone: "muted" },
-  { day: "Wed", label: "Lecture", time: "11:00 – 12:30", tone: "balm" },
-  { day: "Thu", label: "Reading", time: "—", tone: "muted" },
-  { day: "Fri", label: "Lab", time: "15:00 – 17:00", tone: "rind" },
-] as const;
+type ScheduleEvent = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  label: string;
+  time: string;
+  tone: "rind" | "balm" | "muted";
+};
+
+const toISO = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const startOfWeek = (d: Date) => {
+  const x = new Date(d);
+  const dow = (x.getDay() + 6) % 7; // Monday = 0
+  x.setDate(x.getDate() - dow);
+  x.setHours(0, 0, 0, 0);
+  return x;
+};
+
+const addDays = (d: Date, n: number) => {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+};
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const seedEvents = (): ScheduleEvent[] => {
+  const wk = startOfWeek(new Date());
+  return [
+    { id: "s1", date: toISO(addDays(wk, 0)), label: "Seminar", time: "09:00 – 10:30", tone: "rind" },
+    { id: "s2", date: toISO(addDays(wk, 1)), label: "Self study", time: "14:00 – 16:00", tone: "muted" },
+    { id: "s3", date: toISO(addDays(wk, 2)), label: "Lecture", time: "11:00 – 12:30", tone: "balm" },
+    { id: "s4", date: toISO(addDays(wk, 3)), label: "Reading", time: "—", tone: "muted" },
+    { id: "s5", date: toISO(addDays(wk, 4)), label: "Lab", time: "15:00 – 17:00", tone: "rind" },
+  ];
+};
 
 function formatClock(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60);
