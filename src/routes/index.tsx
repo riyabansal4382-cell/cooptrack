@@ -197,13 +197,15 @@ function Index() {
               </p>
 
               {/* Lip balm tube */}
-              <LipBalm fillPct={fillPct} />
+              <LipBalm fillPct={fillPct} working={running} />
 
               <p className="mt-6 text-pretty text-sm text-husk max-w-[34ch]">
-                {fillPct === 100
+                {running
+                  ? "Focus mode on. Fresh balm is pouring in — keep going."
+                  : fillPct === 100
                   ? "Tube's full. That's a wrap — go enjoy your evening."
                   : fillPct === 0
-                  ? "Empty tube. Tick a task to start filling it."
+                  ? "Empty tube. Start the timer or tick a task to start filling it."
                   : `${Math.round(fillPct)}% full. Keep going — chapped focus, no more.`}
               </p>
             </section>
