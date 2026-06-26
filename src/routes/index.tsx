@@ -503,9 +503,6 @@ function Index() {
         )}
       </main>
 
-          </div>
-        </div>
-      </main>
 
       <footer className="mx-auto max-w-7xl border-t border-border px-6 py-10">
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
