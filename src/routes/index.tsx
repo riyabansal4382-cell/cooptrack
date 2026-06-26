@@ -461,21 +461,78 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
         <div className="-mt-1 h-2 w-24 rounded-sm bg-rind/80" />
       </div>
 
-      {/* Pour stream — only when working */}
+      {/* Beaker pouring chemical liquid — only when working */}
       {working && (
-        <div className="pointer-events-none absolute left-1/2 top-10 z-0 -translate-x-1/2">
+        <div
+          className="pointer-events-none absolute left-1/2 -top-2 z-20"
+          style={{ animation: "beaker-tilt 4s ease-in-out infinite" }}
+        >
+          <svg width="92" height="78" viewBox="0 0 92 78" fill="none" aria-hidden>
+            {/* Steam wisps */}
+            <path
+              d="M30 6 Q34 -2 38 6 T46 6"
+              stroke="oklch(0.78 0.04 60)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              fill="none"
+              opacity="0.6"
+              style={{ animation: "steam 2.2s ease-in-out infinite" }}
+            />
+            <path
+              d="M48 10 Q52 2 56 10"
+              stroke="oklch(0.78 0.04 60)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              fill="none"
+              opacity="0.5"
+              style={{ animation: "steam 2.6s ease-in-out 0.4s infinite" }}
+            />
+
+            {/* Beaker body (tilted right via group rotate) */}
+            <g transform="translate(8 18) rotate(38 30 28)">
+              {/* glass outline */}
+              <path
+                d="M6 4 H54 V10 L48 56 Q46 64 38 64 H22 Q14 64 12 56 L6 10 Z"
+                fill="oklch(0.97 0.01 75)"
+                stroke="oklch(0.55 0.18 38)"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              {/* liquid inside */}
+              <path
+                d="M9 22 L51 22 L46 56 Q44 62 38 62 H22 Q16 62 14 56 Z"
+                fill="oklch(0.74 0.16 55)"
+              />
+              {/* surface meniscus */}
+              <ellipse cx="30" cy="22" rx="21" ry="3" fill="oklch(0.82 0.16 60)" />
+              {/* tick marks */}
+              <line x1="46" y1="32" x2="50" y2="32" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
+              <line x1="47" y1="42" x2="50" y2="42" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
+              {/* spout lip */}
+              <path d="M6 4 Q2 6 4 12" stroke="oklch(0.55 0.18 38)" strokeWidth="2" fill="none" strokeLinecap="round" />
+              {/* glass highlight */}
+              <rect x="12" y="14" width="2" height="38" rx="1" fill="white" opacity="0.55" />
+            </g>
+          </svg>
+
+          {/* Chemical stream from beaker spout into tube */}
           <div
-            className="h-16 w-1.5 rounded-full"
+            className="absolute left-[18px] top-[42px] h-14 w-[5px] rounded-full"
             style={{
               background:
                 "linear-gradient(180deg, oklch(0.85 0.16 65) 0%, oklch(0.7 0.18 50) 100%)",
-              animation: "shine 1.2s ease-in-out infinite",
+              boxShadow: "0 0 8px oklch(0.82 0.16 60 / 0.6)",
+              animation: "stream-pulse 1s ease-in-out infinite",
+              transformOrigin: "top center",
             }}
           />
           {/* falling droplet */}
           <div
-            className="absolute left-1/2 top-0 size-2 -translate-x-1/2 rounded-full bg-zest"
-            style={{ animation: "droplet 1s linear infinite" }}
+            className="absolute left-[16px] top-[42px] size-[7px] rounded-full bg-zest"
+            style={{
+              boxShadow: "0 0 6px oklch(0.82 0.16 60 / 0.7)",
+              animation: "droplet 0.9s linear infinite",
+            }}
           />
         </div>
       )}
