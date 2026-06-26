@@ -702,8 +702,8 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
 
         {/* Label band */}
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y border-rind/30 bg-paper/80 py-1 text-center backdrop-blur-sm">
-          <span className="font-serif text-[10px] italic tracking-wide text-rind">
-            Balm Nº1
+          <span className="font-serif text-[10px] italic tracking-wide text-rind whitespace-pre-line">
+            {"R2\n"}
           </span>
         </div>
       </div>
