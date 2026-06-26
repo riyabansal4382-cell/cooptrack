@@ -118,6 +118,43 @@ function Index() {
     setFocusMinutes((m) => Math.max(5, Math.min(120, m + delta)));
   };
 
+  // Schedule -----------------------------------------------------------
+  const [events, setEvents] = useState<ScheduleEvent[]>(() => seedEvents());
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [monthCursor, setMonthCursor] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const addEvent = (date: string, label: string, time: string, tone: ScheduleEvent["tone"] = "balm") => {
+    const trimmed = label.trim();
+    if (!trimmed) return;
+    setEvents((es) => [
+      ...es,
+      { id: crypto.randomUUID(), date, label: trimmed, time: time.trim() || "—", tone },
+    ]);
+  };
+  const removeEvent = (id: string) =>
+    setEvents((es) => es.filter((e) => e.id !== id));
+
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, ScheduleEvent[]>();
+    for (const e of events) {
+      const arr = map.get(e.date) ?? [];
+      arr.push(e);
+      map.set(e.date, arr);
+    }
+    return map;
+  }, [events]);
+
+  const weekDates = useMemo(() => {
+    const wk = startOfWeek(new Date());
+    return Array.from({ length: 7 }, (_, i) => addDays(wk, i));
+  }, []);
+
+
   // GPA -----------------------------------------------------------------
   const [courses, setCourses] = useState<Course[]>([
     { id: "c1", name: "Macroeconomics 101", credits: 4, grade: "A-" },
