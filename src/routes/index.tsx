@@ -42,8 +42,9 @@ function formatClock(totalSeconds: number) {
 
 function Index() {
   // Timer ---------------------------------------------------------------
-  const FOCUS_SECONDS = 25 * 60;
-  const [secondsLeft, setSecondsLeft] = useState(FOCUS_SECONDS);
+  const [focusMinutes, setFocusMinutes] = useState(25);
+  const focusSeconds = focusMinutes * 60;
+  const [secondsLeft, setSecondsLeft] = useState(focusSeconds);
   const [running, setRunning] = useState(false);
   const [sessions, setSessions] = useState(0);
   const intervalRef = useRef<number | null>(null);
@@ -55,7 +56,7 @@ function Index() {
         if (s <= 1) {
           setRunning(false);
           setSessions((c) => c + 1);
-          return FOCUS_SECONDS;
+          return focusMinutes * 60;
         }
         return s - 1;
       });
@@ -63,11 +64,20 @@ function Index() {
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
     };
-  }, [running]);
+  }, [running, focusMinutes]);
+
+  // Keep clock in sync when user changes duration while idle
+  useEffect(() => {
+    if (!running) setSecondsLeft(focusMinutes * 60);
+  }, [focusMinutes, running]);
 
   const resetTimer = () => {
     setRunning(false);
-    setSecondsLeft(FOCUS_SECONDS);
+    setSecondsLeft(focusMinutes * 60);
+  };
+
+  const changeFocus = (delta: number) => {
+    setFocusMinutes((m) => Math.max(5, Math.min(120, m + delta)));
   };
 
   // GPA -----------------------------------------------------------------
