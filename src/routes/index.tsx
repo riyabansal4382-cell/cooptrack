@@ -190,6 +190,7 @@ function Index() {
     { id: "t4", label: "Flashcards: Spanish verbs", done: false },
   ]);
   const [newTask, setNewTask] = useState("");
+  const [balmFullscreen, setBalmFullscreen] = useState(false);
 
   const toggleTask = (id: string) =>
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
