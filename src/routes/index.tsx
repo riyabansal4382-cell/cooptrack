@@ -673,3 +673,307 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
   );
 }
 
+
+const TONE_BG: Record<string, string> = {
+  rind: "bg-rind/10 border-l-2 border-rind",
+  balm: "bg-balm/20 border-l-2 border-balm",
+  muted: "bg-cream border-l-2 border-husk/30",
+};
+const TONE_LABEL: Record<string, string> = {
+  rind: "text-rind",
+  balm: "text-ink",
+  muted: "text-husk",
+};
+
+function WeeklyGrid({
+  weekDates,
+  eventsByDate,
+  onRemove,
+  onAdd,
+}: {
+  weekDates: Date[];
+  eventsByDate: Map<string, ScheduleEvent[]>;
+  onRemove: (id: string) => void;
+  onAdd: (date: string, label: string, time: string, tone?: ScheduleEvent["tone"]) => void;
+}) {
+  const todayISO = toISO(new Date());
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      {weekDates.map((d, i) => {
+        const iso = toISO(d);
+        const dayEvents = eventsByDate.get(iso) ?? [];
+        const isToday = iso === todayISO;
+        return (
+          <div key={iso} className="space-y-2">
+            <div className="flex items-baseline justify-between">
+              <span
+                className={`block text-[10px] font-medium uppercase tracking-[0.2em] ${
+                  isToday ? "text-rind" : "text-husk"
+                }`}
+              >
+                {DOW_LABELS[i]}
+              </span>
+              <span className={`font-serif text-sm ${isToday ? "text-rind" : "text-ink/70"}`}>
+                {d.getDate()}
+              </span>
+            </div>
+            <div
+              className={`min-h-28 space-y-1.5 rounded-lg p-2 ring-1 ring-border ${
+                isToday ? "bg-paper" : "bg-cream/50"
+              }`}
+            >
+              {dayEvents.map((e) => (
+                <div
+                  key={e.id}
+                  className={`group relative rounded p-2 ${TONE_BG[e.tone]}`}
+                >
+                  <p className={`text-[11px] font-semibold uppercase tracking-wide ${TONE_LABEL[e.tone]}`}>
+                    {e.label}
+                  </p>
+                  <p className="mt-0.5 text-[11px] font-medium text-ink/70">{e.time}</p>
+                  <button
+                    onClick={() => onRemove(e.id)}
+                    className="absolute right-1 top-1 text-[10px] text-husk opacity-0 transition group-hover:opacity-100 hover:text-rind"
+                    aria-label="Remove event"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <QuickAddEvent date={iso} onAdd={onAdd} compact />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function QuickAddEvent({
+  date,
+  onAdd,
+  compact,
+}: {
+  date: string;
+  onAdd: (date: string, label: string, time: string, tone?: ScheduleEvent["tone"]) => void;
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState("");
+  const [time, setTime] = useState("");
+  const [tone, setTone] = useState<ScheduleEvent["tone"]>("balm");
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className={`flex w-full items-center justify-center gap-1 rounded border border-dashed border-husk/30 py-1 text-[11px] text-husk transition hover:border-rind hover:text-rind ${
+          compact ? "" : "py-2"
+        }`}
+      >
+        + Task
+      </button>
+    );
+  }
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onAdd(date, label, time, tone);
+        setLabel("");
+        setTime("");
+        setOpen(false);
+      }}
+      className="space-y-1.5 rounded border border-rind/30 bg-paper p-2"
+    >
+      <input
+        autoFocus
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        placeholder="Task"
+        className="w-full rounded bg-cream/60 px-2 py-1 text-[11px] text-ink placeholder:text-husk focus:outline-none"
+      />
+      <input
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
+        placeholder="Time"
+        className="w-full rounded bg-cream/60 px-2 py-1 text-[11px] text-ink placeholder:text-husk focus:outline-none"
+      />
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex gap-1">
+          {(["rind", "balm", "muted"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTone(t)}
+              className={`size-3.5 rounded-full ring-1 ring-border transition ${
+                tone === t ? "ring-2 ring-ink" : ""
+              } ${t === "rind" ? "bg-rind" : t === "balm" ? "bg-balm" : "bg-husk/40"}`}
+              aria-label={`Tone ${t}`}
+            />
+          ))}
+        </div>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="rounded px-2 py-0.5 text-[10px] text-husk hover:text-rind"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="rounded bg-rind px-2 py-0.5 text-[10px] font-medium text-paper hover:opacity-90"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function MonthCalendar({
+  cursor,
+  setCursor,
+  eventsByDate,
+  onClose,
+  onAdd,
+  onRemove,
+}: {
+  cursor: Date;
+  setCursor: (d: Date) => void;
+  eventsByDate: Map<string, ScheduleEvent[]>;
+  onClose: () => void;
+  onAdd: (date: string, label: string, time: string, tone?: ScheduleEvent["tone"]) => void;
+  onRemove: (id: string) => void;
+}) {
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+  const firstOfMonth = new Date(year, month, 1);
+  const gridStart = startOfWeek(firstOfMonth);
+  const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  const todayISO = toISO(new Date());
+
+  const goMonth = (delta: number) => {
+    const d = new Date(year, month + delta, 1);
+    setCursor(d);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-paper ring-1 ring-border"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
+          <div className="flex items-center gap-3">
+            <h2 className="font-serif text-2xl font-medium">
+              {MONTHS[month]} <span className="text-husk">{year}</span>
+            </h2>
+            <div className="flex items-center gap-1 rounded-full bg-cream p-1 ring-1 ring-border">
+              <button
+                onClick={() => goMonth(-1)}
+                className="grid size-7 place-items-center rounded-full text-husk hover:bg-rind/10 hover:text-rind"
+                aria-label="Previous month"
+              >
+                ‹
+              </button>
+              <button
+                onClick={() => {
+                  const d = new Date();
+                  d.setDate(1);
+                  d.setHours(0, 0, 0, 0);
+                  setCursor(d);
+                }}
+                className="rounded-full px-3 py-0.5 text-[11px] font-medium uppercase tracking-[0.16em] text-husk hover:text-rind"
+              >
+                Today
+              </button>
+              <button
+                onClick={() => goMonth(1)}
+                className="grid size-7 place-items-center rounded-full text-husk hover:bg-rind/10 hover:text-rind"
+                aria-label="Next month"
+              >
+                ›
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid size-9 place-items-center rounded-full bg-cream text-husk hover:bg-rind/10 hover:text-rind"
+            aria-label="Close calendar"
+          >
+            ✕
+          </button>
+        </header>
+
+        <div className="grid grid-cols-7 border-b border-border bg-cream/50">
+          {DOW_LABELS.map((d) => (
+            <div
+              key={d}
+              className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.18em] text-husk"
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid flex-1 grid-cols-7 overflow-y-auto">
+          {cells.map((d, i) => {
+            const iso = toISO(d);
+            const inMonth = d.getMonth() === month;
+            const isToday = iso === todayISO;
+            const dayEvents = eventsByDate.get(iso) ?? [];
+            return (
+              <div
+                key={iso + i}
+                className={`min-h-[120px] border-b border-r border-border p-2 ${
+                  inMonth ? "bg-paper" : "bg-cream/30"
+                }`}
+              >
+                <div className="mb-1 flex items-center justify-between">
+                  <span
+                    className={`font-serif text-sm ${
+                      isToday
+                        ? "grid size-6 place-items-center rounded-full bg-rind text-paper"
+                        : inMonth
+                        ? "text-ink"
+                        : "text-husk/50"
+                    }`}
+                  >
+                    {d.getDate()}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {dayEvents.map((e) => (
+                    <div
+                      key={e.id}
+                      className={`group relative rounded px-1.5 py-1 ${TONE_BG[e.tone]}`}
+                    >
+                      <p className={`truncate text-[10px] font-semibold uppercase tracking-wide ${TONE_LABEL[e.tone]}`}>
+                        {e.label}
+                      </p>
+                      <p className="text-[10px] text-ink/60">{e.time}</p>
+                      <button
+                        onClick={() => onRemove(e.id)}
+                        className="absolute right-0.5 top-0.5 text-[9px] text-husk opacity-0 transition group-hover:opacity-100 hover:text-rind"
+                        aria-label="Remove event"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {inMonth && <QuickAddEvent date={iso} onAdd={onAdd} compact />}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
