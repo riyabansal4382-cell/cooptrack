@@ -466,37 +466,43 @@ function Index() {
             </section>
 
             <section>
-              <h2 className="mb-6 font-serif text-lg font-medium">Weekly Overview</h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                {SCHEDULE.map((s) => {
-                  const tones: Record<string, string> = {
-                    rind: "bg-rind/8 border-l-2 border-rind",
-                    balm: "bg-balm/15 border-l-2 border-balm",
-                    muted: "bg-cream border-l-2 border-transparent",
-                  };
-                  const labelTone: Record<string, string> = {
-                    rind: "text-rind",
-                    balm: "text-ink",
-                    muted: "text-husk",
-                  };
-                  return (
-                    <div key={s.day} className="space-y-2">
-                      <span className="block text-[10px] font-medium uppercase tracking-[0.2em] text-husk">
-                        {s.day}
-                      </span>
-                      <div className={`h-24 rounded-lg p-3 ${tones[s.tone]}`}>
-                        <p
-                          className={`text-[11px] font-semibold uppercase tracking-wide ${labelTone[s.tone]}`}
-                        >
-                          {s.label}
-                        </p>
-                        <p className="mt-1 text-xs font-medium text-ink/80">{s.time}</p>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="mb-6 flex items-end justify-between gap-4">
+                <div>
+                  <h2 className="font-serif text-lg font-medium">Weekly Overview</h2>
+                  <p className="mt-1 text-xs text-husk">
+                    {weekDates[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} –{" "}
+                    {weekDates[6].toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCalendarOpen(true)}
+                  className="rounded-full bg-ink px-4 py-2 text-xs font-medium uppercase tracking-[0.16em] text-paper transition hover:bg-rind"
+                >
+                  Open month
+                </button>
               </div>
+              <WeeklyGrid
+                weekDates={weekDates}
+                eventsByDate={eventsByDate}
+                onRemove={removeEvent}
+                onAdd={addEvent}
+              />
             </section>
+          </div>
+        </div>
+
+        {calendarOpen && (
+          <MonthCalendar
+            cursor={monthCursor}
+            setCursor={setMonthCursor}
+            eventsByDate={eventsByDate}
+            onClose={() => setCalendarOpen(false)}
+            onAdd={addEvent}
+            onRemove={removeEvent}
+          />
+        )}
+      </main>
+
           </div>
         </div>
       </main>
