@@ -142,15 +142,39 @@ function Index() {
             <h1 className="font-serif text-xl font-medium tracking-tight">Balm</h1>
           </div>
 
-          <div className="flex items-center gap-5 rounded-full bg-cream py-1.5 pr-2 pl-6 ring-1 ring-border">
+          <div className="flex flex-wrap items-center justify-center gap-3 rounded-full bg-cream py-1.5 pr-2 pl-5 ring-1 ring-border">
             <div className="flex items-baseline gap-3">
               <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-husk">
-                Focus session
+                Focus
               </span>
               <span className="font-serif text-2xl font-medium leading-none tabular-nums">
                 {formatClock(secondsLeft)}
               </span>
             </div>
+
+            {/* Duration stepper */}
+            <div className="flex items-center gap-1 rounded-full bg-paper px-1 py-1 ring-1 ring-border">
+              <button
+                onClick={() => changeFocus(-5)}
+                disabled={running}
+                className="grid size-6 place-items-center rounded-full text-husk transition hover:bg-rind/10 hover:text-rind disabled:opacity-40"
+                aria-label="Decrease focus duration"
+              >
+                −
+              </button>
+              <span className="min-w-[3.25rem] text-center text-xs font-medium tabular-nums text-ink">
+                {focusMinutes} min
+              </span>
+              <button
+                onClick={() => changeFocus(5)}
+                disabled={running}
+                className="grid size-6 place-items-center rounded-full text-husk transition hover:bg-rind/10 hover:text-rind disabled:opacity-40"
+                aria-label="Increase focus duration"
+              >
+                +
+              </button>
+            </div>
+
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setRunning((r) => !r)}
