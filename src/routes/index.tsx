@@ -540,84 +540,78 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
       </div>
 
       {/* Beaker pouring chemical liquid — only when working.
-          Beaker is offset to the right and tilted away from the tube,
-          so only its spout overhangs and feeds the balm below. */}
+          Mirrored to the left side of the tube and tilted toward the LEFT,
+          spout angled back over the tube. */}
       {working && (
         <div
-          className="pointer-events-none absolute left-[58%] -top-3 z-20"
-          style={{
-            animation: "beaker-tilt 4s ease-in-out infinite",
-            transformOrigin: "10% 90%",
-          }}
+          className="pointer-events-none absolute right-[58%] -top-3 z-20"
+          style={{ transform: "scaleX(-1)" }}
         >
-          <svg width="110" height="86" viewBox="0 0 110 86" fill="none" aria-hidden>
-            {/* Steam wisps rising off the tilted body */}
-            <path
-              d="M58 8 Q62 0 66 8 T74 8"
-              stroke="oklch(0.78 0.04 60)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              fill="none"
-              opacity="0.6"
-              style={{ animation: "steam 2.2s ease-in-out infinite" }}
-            />
-            <path
-              d="M74 12 Q78 4 82 12"
-              stroke="oklch(0.78 0.04 60)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              fill="none"
-              opacity="0.5"
-              style={{ animation: "steam 2.6s ease-in-out 0.4s infinite" }}
-            />
-
-            {/* Beaker body — tilted strongly to the RIGHT (away from the tube on its left).
-                Spout is on the LEFT side so liquid still pours toward the tube. */}
-            <g transform="translate(20 14) rotate(48 30 32)">
-              {/* glass outline */}
-              <path
-                d="M6 4 H54 V10 L48 56 Q46 64 38 64 H22 Q14 64 12 56 L6 10 Z"
-                fill="oklch(0.97 0.01 75)"
-                stroke="oklch(0.55 0.18 38)"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              {/* liquid inside */}
-              <path
-                d="M9 22 L51 22 L46 56 Q44 62 38 62 H22 Q16 62 14 56 Z"
-                fill="oklch(0.74 0.16 55)"
-              />
-              {/* surface meniscus */}
-              <ellipse cx="30" cy="22" rx="21" ry="3" fill="oklch(0.82 0.16 60)" />
-              {/* tick marks on the upright side */}
-              <line x1="46" y1="32" x2="50" y2="32" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
-              <line x1="47" y1="42" x2="50" y2="42" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
-              {/* spout lip on the LEFT — the side facing the tube */}
-              <path d="M6 4 Q2 6 4 12" stroke="oklch(0.55 0.18 38)" strokeWidth="2" fill="none" strokeLinecap="round" />
-              {/* glass highlight */}
-              <rect x="12" y="14" width="2" height="38" rx="1" fill="white" opacity="0.55" />
-            </g>
-          </svg>
-
-          {/* Chemical stream from beaker spout down into the tube */}
           <div
-            className="absolute -left-[6px] top-[54px] h-12 w-[5px] rounded-full"
             style={{
-              background:
-                "linear-gradient(180deg, oklch(0.85 0.16 65) 0%, oklch(0.7 0.18 50) 100%)",
-              boxShadow: "0 0 8px oklch(0.82 0.16 60 / 0.6)",
-              animation: "stream-pulse 1s ease-in-out infinite",
-              transformOrigin: "top center",
+              animation: "beaker-tilt 4s ease-in-out infinite",
+              transformOrigin: "10% 90%",
             }}
-          />
-          {/* falling droplet */}
-          <div
-            className="absolute -left-[8px] top-[54px] size-[7px] rounded-full bg-zest"
-            style={{
-              boxShadow: "0 0 6px oklch(0.82 0.16 60 / 0.7)",
-              animation: "droplet 0.9s linear infinite",
-            }}
-          />
+          >
+            <svg width="110" height="86" viewBox="0 0 110 86" fill="none" aria-hidden>
+              {/* Steam wisps rising off the tilted body */}
+              <path
+                d="M58 8 Q62 0 66 8 T74 8"
+                stroke="oklch(0.78 0.04 60)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                fill="none"
+                opacity="0.6"
+                style={{ animation: "steam 2.2s ease-in-out infinite" }}
+              />
+              <path
+                d="M74 12 Q78 4 82 12"
+                stroke="oklch(0.78 0.04 60)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                fill="none"
+                opacity="0.5"
+                style={{ animation: "steam 2.6s ease-in-out 0.4s infinite" }}
+              />
+
+              <g transform="translate(20 14) rotate(48 30 32)">
+                <path
+                  d="M6 4 H54 V10 L48 56 Q46 64 38 64 H22 Q14 64 12 56 L6 10 Z"
+                  fill="oklch(0.97 0.01 75)"
+                  stroke="oklch(0.55 0.18 38)"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M9 22 L51 22 L46 56 Q44 62 38 62 H22 Q16 62 14 56 Z"
+                  fill="oklch(0.74 0.16 55)"
+                />
+                <ellipse cx="30" cy="22" rx="21" ry="3" fill="oklch(0.82 0.16 60)" />
+                <line x1="46" y1="32" x2="50" y2="32" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
+                <line x1="47" y1="42" x2="50" y2="42" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
+                <path d="M6 4 Q2 6 4 12" stroke="oklch(0.55 0.18 38)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <rect x="12" y="14" width="2" height="38" rx="1" fill="white" opacity="0.55" />
+              </g>
+            </svg>
+
+            <div
+              className="absolute -left-[6px] top-[54px] h-12 w-[5px] rounded-full"
+              style={{
+                background:
+                  "linear-gradient(180deg, oklch(0.85 0.16 65) 0%, oklch(0.7 0.18 50) 100%)",
+                boxShadow: "0 0 8px oklch(0.82 0.16 60 / 0.6)",
+                animation: "stream-pulse 1s ease-in-out infinite",
+                transformOrigin: "top center",
+              }}
+            />
+            <div
+              className="absolute -left-[8px] top-[54px] size-[7px] rounded-full bg-zest"
+              style={{
+                boxShadow: "0 0 6px oklch(0.82 0.16 60 / 0.7)",
+                animation: "droplet 0.9s linear infinite",
+              }}
+            />
+          </div>
         </div>
       )}
 
