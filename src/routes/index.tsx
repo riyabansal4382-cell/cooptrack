@@ -512,6 +512,38 @@ function Index() {
             onRemove={removeEvent}
           />
         )}
+
+        {balmFullscreen && (
+          <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-xl animate-fade-in">
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-husk">Focus view</p>
+                <h2 className="font-serif text-2xl">Daily Balm · {Math.round(fillPct)}%</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="hidden sm:inline text-xs uppercase tracking-[0.18em] text-husk">
+                  {running ? `${formatClock(secondsLeft)} left` : "Timer paused"}
+                </span>
+                <button
+                  onClick={() => setBalmFullscreen(false)}
+                  className="rounded-full border border-border bg-paper px-4 py-2 text-xs font-medium uppercase tracking-[0.16em] text-husk transition hover:border-rind hover:text-rind"
+                >
+                  Exit ✕
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-1 items-center justify-center px-6 py-10">
+              <div className="scale-[1.8] sm:scale-[2.4] md:scale-[3] origin-center">
+                <LipBalm fillPct={fillPct} working={running} />
+              </div>
+            </div>
+            <p className="px-6 pb-8 text-center text-sm text-husk">
+              {running
+                ? "Focus mode on. Fresh balm is pouring in — keep going."
+                : "Start the timer to begin the pour."}
+            </p>
+          </div>
+        )}
       </main>
 
 
