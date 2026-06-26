@@ -296,11 +296,21 @@ function Index() {
           {/* Left: Lip balm progress + tasks */}
           <div className="space-y-8 lg:col-span-4">
             <section className="rounded-3xl bg-cream p-8 ring-1 ring-border">
-              <div className="mb-2 flex items-baseline justify-between">
+              <div className="mb-2 flex items-baseline justify-between gap-2">
                 <h2 className="font-serif text-lg font-medium">Daily Balm</h2>
-                <span className="text-xs font-medium uppercase tracking-[0.18em] text-husk">
-                  {doneCount}/{tasks.length}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium uppercase tracking-[0.18em] text-husk">
+                    {doneCount}/{tasks.length}
+                  </span>
+                  <button
+                    onClick={() => setBalmFullscreen(true)}
+                    className="rounded-full border border-border bg-paper px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-husk transition hover:border-rind hover:text-rind"
+                    aria-label="Open lip balm in fullscreen"
+                    title="Fullscreen focus view"
+                  >
+                    ⤢ Focus
+                  </button>
+                </div>
               </div>
               <p className="mb-6 max-w-[32ch] text-sm text-husk">
                 Every task you finish fills the tube a little more. Cap it off by the end of the day.
