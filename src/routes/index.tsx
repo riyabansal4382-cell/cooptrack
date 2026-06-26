@@ -587,8 +587,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
           spout angled back over the tube. */}
       {working && (
         <div
-          className="pointer-events-none absolute right-[58%] -top-3 z-20"
-          style={{ transform: "scaleX(-1)" }}
+          className="pointer-events-none absolute left-[58%] -top-3 z-20"
         >
           <div
             style={{
