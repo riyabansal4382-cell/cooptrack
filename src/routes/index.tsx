@@ -539,16 +539,21 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
         <div className="-mt-1 h-2 w-24 rounded-sm bg-rind/80" />
       </div>
 
-      {/* Beaker pouring chemical liquid — only when working */}
+      {/* Beaker pouring chemical liquid — only when working.
+          Beaker is offset to the right and tilted away from the tube,
+          so only its spout overhangs and feeds the balm below. */}
       {working && (
         <div
-          className="pointer-events-none absolute left-1/2 -top-2 z-20"
-          style={{ animation: "beaker-tilt 4s ease-in-out infinite" }}
+          className="pointer-events-none absolute left-[58%] -top-3 z-20"
+          style={{
+            animation: "beaker-tilt 4s ease-in-out infinite",
+            transformOrigin: "10% 90%",
+          }}
         >
-          <svg width="92" height="78" viewBox="0 0 92 78" fill="none" aria-hidden>
-            {/* Steam wisps */}
+          <svg width="110" height="86" viewBox="0 0 110 86" fill="none" aria-hidden>
+            {/* Steam wisps rising off the tilted body */}
             <path
-              d="M30 6 Q34 -2 38 6 T46 6"
+              d="M58 8 Q62 0 66 8 T74 8"
               stroke="oklch(0.78 0.04 60)"
               strokeWidth="1.5"
               strokeLinecap="round"
@@ -557,7 +562,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               style={{ animation: "steam 2.2s ease-in-out infinite" }}
             />
             <path
-              d="M48 10 Q52 2 56 10"
+              d="M74 12 Q78 4 82 12"
               stroke="oklch(0.78 0.04 60)"
               strokeWidth="1.5"
               strokeLinecap="round"
@@ -566,8 +571,9 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               style={{ animation: "steam 2.6s ease-in-out 0.4s infinite" }}
             />
 
-            {/* Beaker body (tilted right via group rotate) */}
-            <g transform="translate(8 18) rotate(38 30 28)">
+            {/* Beaker body — tilted strongly to the RIGHT (away from the tube on its left).
+                Spout is on the LEFT side so liquid still pours toward the tube. */}
+            <g transform="translate(20 14) rotate(48 30 32)">
               {/* glass outline */}
               <path
                 d="M6 4 H54 V10 L48 56 Q46 64 38 64 H22 Q14 64 12 56 L6 10 Z"
@@ -583,19 +589,19 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               />
               {/* surface meniscus */}
               <ellipse cx="30" cy="22" rx="21" ry="3" fill="oklch(0.82 0.16 60)" />
-              {/* tick marks */}
+              {/* tick marks on the upright side */}
               <line x1="46" y1="32" x2="50" y2="32" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
               <line x1="47" y1="42" x2="50" y2="42" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
-              {/* spout lip */}
+              {/* spout lip on the LEFT — the side facing the tube */}
               <path d="M6 4 Q2 6 4 12" stroke="oklch(0.55 0.18 38)" strokeWidth="2" fill="none" strokeLinecap="round" />
               {/* glass highlight */}
               <rect x="12" y="14" width="2" height="38" rx="1" fill="white" opacity="0.55" />
             </g>
           </svg>
 
-          {/* Chemical stream from beaker spout into tube */}
+          {/* Chemical stream from beaker spout down into the tube */}
           <div
-            className="absolute left-[18px] top-[42px] h-14 w-[5px] rounded-full"
+            className="absolute -left-[6px] top-[54px] h-12 w-[5px] rounded-full"
             style={{
               background:
                 "linear-gradient(180deg, oklch(0.85 0.16 65) 0%, oklch(0.7 0.18 50) 100%)",
@@ -606,7 +612,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
           />
           {/* falling droplet */}
           <div
-            className="absolute left-[16px] top-[42px] size-[7px] rounded-full bg-zest"
+            className="absolute -left-[8px] top-[54px] size-[7px] rounded-full bg-zest"
             style={{
               boxShadow: "0 0 6px oklch(0.82 0.16 60 / 0.7)",
               animation: "droplet 0.9s linear infinite",
@@ -614,6 +620,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
           />
         </div>
       )}
+
 
       {/* Tube body */}
       <div
