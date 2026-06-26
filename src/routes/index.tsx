@@ -197,13 +197,15 @@ function Index() {
               </p>
 
               {/* Lip balm tube */}
-              <LipBalm fillPct={fillPct} />
+              <LipBalm fillPct={fillPct} working={running} />
 
               <p className="mt-6 text-pretty text-sm text-husk max-w-[34ch]">
-                {fillPct === 100
+                {running
+                  ? "Focus mode on. Fresh balm is pouring in — keep going."
+                  : fillPct === 100
                   ? "Tube's full. That's a wrap — go enjoy your evening."
                   : fillPct === 0
-                  ? "Empty tube. Tick a task to start filling it."
+                  ? "Empty tube. Start the timer or tick a task to start filling it."
                   : `${Math.round(fillPct)}% full. Keep going — chapped focus, no more.`}
               </p>
             </section>
@@ -404,31 +406,84 @@ function Index() {
   );
 }
 
-function LipBalm({ fillPct }: { fillPct: number }) {
+function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
   const clamped = Math.max(0, Math.min(100, fillPct));
+  // During working mode, show a small "live pour" bonus on top of task fill
+  const liveBoost = working ? Math.min(8, 100 - clamped) : 0;
+  const visibleFill = clamped + liveBoost;
+
   return (
-    <div className="relative mx-auto flex h-64 w-full max-w-[180px] flex-col items-center">
-      {/* Cap */}
-      <div className="h-10 w-20 rounded-t-md bg-rind shadow-[inset_0_-4px_0_rgba(0,0,0,0.08)]" />
-      <div className="h-2 w-24 -mt-1 rounded-sm bg-rind/80" />
+    <div className="relative mx-auto flex h-72 w-full max-w-[200px] flex-col items-center">
+      {/* Cap — lifts off and floats aside when working */}
+      <div
+        className="relative z-10 flex flex-col items-center transition-all duration-700 ease-out"
+        style={{
+          transform: working
+            ? "translate(64px, -8px) rotate(22deg)"
+            : "translate(0,0) rotate(0deg)",
+        }}
+      >
+        <div className="h-10 w-20 rounded-t-md bg-rind shadow-[inset_0_-4px_0_rgba(0,0,0,0.08)]" />
+        <div className="-mt-1 h-2 w-24 rounded-sm bg-rind/80" />
+      </div>
+
+      {/* Pour stream — only when working */}
+      {working && (
+        <div className="pointer-events-none absolute left-1/2 top-10 z-0 -translate-x-1/2">
+          <div
+            className="h-16 w-1.5 rounded-full"
+            style={{
+              background:
+                "linear-gradient(180deg, oklch(0.85 0.16 65) 0%, oklch(0.7 0.18 50) 100%)",
+              animation: "shine 1.2s ease-in-out infinite",
+            }}
+          />
+          {/* falling droplet */}
+          <div
+            className="absolute left-1/2 top-0 size-2 -translate-x-1/2 rounded-full bg-zest"
+            style={{ animation: "droplet 1s linear infinite" }}
+          />
+        </div>
+      )}
 
       {/* Tube body */}
-      <div className="relative mt-1 h-44 w-24 overflow-hidden rounded-b-2xl rounded-t-md bg-paper ring-1 ring-border">
+      <div
+        className={`relative mt-2 h-48 w-24 overflow-hidden rounded-b-2xl rounded-t-md bg-paper ring-1 ring-border ${
+          working ? "shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-rind)_18%,transparent)]" : ""
+        }`}
+      >
         {/* Balm fill */}
         <div
           className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out"
           style={{
-            height: `${clamped}%`,
+            height: `${visibleFill}%`,
             background:
               "linear-gradient(180deg, oklch(0.82 0.16 60) 0%, oklch(0.68 0.18 45) 100%)",
           }}
         >
-          {/* meniscus / shine */}
+          {/* meniscus / surface */}
           <div className="absolute -top-1 left-0 right-0 h-2 rounded-full bg-zest/70 blur-[1px]" />
-          <div className="absolute left-2 top-2 h-10 w-1.5 rounded-full bg-white/35 animate-[shine_3s_ease-in-out_infinite]" />
+          {working && (
+            <>
+              {/* ripple where stream lands */}
+              <div
+                className="absolute left-1/2 -top-1 size-6 -translate-x-1/2 rounded-full border border-zest/70"
+                style={{ animation: "ripple 1.4s ease-out infinite" }}
+              />
+              <div
+                className="absolute left-1/2 -top-1 size-6 -translate-x-1/2 rounded-full border border-zest/50"
+                style={{ animation: "ripple 1.4s ease-out 0.6s infinite" }}
+              />
+            </>
+          )}
+          {/* inner shine */}
+          <div
+            className="absolute left-2 top-2 h-10 w-1.5 rounded-full bg-white/35"
+            style={{ animation: "shine 3s ease-in-out infinite" }}
+          />
         </div>
 
-        {/* Tube highlight */}
+        {/* Tube highlights */}
         <div className="pointer-events-none absolute left-2 top-0 h-full w-1.5 rounded-full bg-white/40" />
         <div className="pointer-events-none absolute right-3 top-0 h-full w-0.5 rounded-full bg-ink/5" />
 
@@ -443,8 +498,9 @@ function LipBalm({ fillPct }: { fillPct: number }) {
       {/* Base */}
       <div className="h-3 w-28 rounded-b-lg bg-rind/80" />
       <div className="mt-3 text-center text-[10px] font-medium uppercase tracking-[0.22em] text-husk">
-        {Math.round(clamped)}% full
+        {working ? "Pouring…" : `${Math.round(clamped)}% full`}
       </div>
     </div>
   );
 }
+
