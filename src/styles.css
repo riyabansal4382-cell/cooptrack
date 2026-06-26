@@ -110,8 +110,8 @@
   100% { transform: translateX(-50%) scale(1.8); opacity: 0; }
 }
 @keyframes beaker-tilt {
-  0%, 100% { transform: translateX(-58%) rotate(-2deg); }
-  50% { transform: translateX(-58%) rotate(4deg); }
+  0%, 100% { transform: rotate(-46deg); }
+  50% { transform: rotate(-52deg); }
 }
 @keyframes stream-pulse {
   0%, 100% { transform: scaleY(1); opacity: 0.9; }
