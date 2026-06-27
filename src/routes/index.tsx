@@ -334,57 +334,63 @@ function Index() {
               <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-husk">
                 Today's objectives
               </h3>
-              <ul className="space-y-2">
-                {tasks.map((t) => (
-                  <li
-                    key={t.id}
-                    className="group flex items-center gap-3 rounded-xl bg-paper p-3 ring-1 ring-border transition hover:bg-cream"
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+                <div className="space-y-3">
+                  <ul className="space-y-2">
+                    {tasks.map((t) => (
+                      <li
+                        key={t.id}
+                        className="group flex items-center gap-3 rounded-xl bg-paper p-3 ring-1 ring-border transition hover:bg-cream"
+                      >
+                        <button
+                          onClick={() => toggleTask(t.id)}
+                          className="grid size-5 shrink-0 place-items-center rounded border border-border bg-paper transition group-hover:border-rind"
+                          aria-label={t.done ? "Mark task incomplete" : "Mark task complete"}
+                        >
+                          {t.done && <div className="size-3 rounded-sm bg-rind" />}
+                        </button>
+                        <span
+                          className={`flex-1 text-sm ${
+                            t.done ? "text-husk line-through decoration-balm" : "text-ink"
+                          }`}
+                        >
+                          {t.label}
+                        </span>
+                        <button
+                          onClick={() => removeTask(t.id)}
+                          className="text-xs text-husk opacity-0 transition hover:text-rind group-hover:opacity-100"
+                          aria-label="Remove task"
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      addTask();
+                    }}
+                    className="flex gap-2"
                   >
+                    <input
+                      value={newTask}
+                      onChange={(e) => setNewTask(e.target.value)}
+                      placeholder="+ Add new task"
+                      className="flex-1 rounded-xl border border-dashed border-border bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-husk focus:border-rind focus:outline-none"
+                    />
                     <button
-                      onClick={() => toggleTask(t.id)}
-                      className="grid size-5 shrink-0 place-items-center rounded border border-border bg-paper transition group-hover:border-rind"
-                      aria-label={t.done ? "Mark task incomplete" : "Mark task complete"}
+                      type="submit"
+                      className="rounded-xl bg-rind px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
                     >
-                      {t.done && <div className="size-3 rounded-sm bg-rind" />}
+                      Add
                     </button>
-                    <span
-                      className={`flex-1 text-sm ${
-                        t.done ? "text-husk line-through decoration-balm" : "text-ink"
-                      }`}
-                    >
-                      {t.label}
-                    </span>
-                    <button
-                      onClick={() => removeTask(t.id)}
-                      className="text-xs text-husk opacity-0 transition hover:text-rind group-hover:opacity-100"
-                      aria-label="Remove task"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  addTask();
-                }}
-                className="flex gap-2"
-              >
-                <input
-                  value={newTask}
-                  onChange={(e) => setNewTask(e.target.value)}
-                  placeholder="+ Add new task"
-                  className="flex-1 rounded-xl border border-dashed border-border bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-husk focus:border-rind focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="rounded-xl bg-rind px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-                >
-                  Add
-                </button>
-              </form>
+                  </form>
+                </div>
+                <WeeklyTaskChart completed={weekSeries} todayIdx={todayIdx} />
+              </div>
             </section>
+
           </div>
 
           {/* Right: GPA + schedule */}
