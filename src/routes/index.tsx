@@ -567,38 +567,64 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
   const liveBoost = working ? Math.min(8, 100 - clamped) : 0;
   const visibleFill = clamped + liveBoost;
 
+  // Color darkens as more tasks are completed.
+  const t = clamped / 100;
+  const lTop = (0.88 - 0.22 * t).toFixed(3);
+  const cTop = (0.12 + 0.06 * t).toFixed(3);
+  const lBot = (0.74 - 0.30 * t).toFixed(3);
+  const cBot = (0.14 + 0.08 * t).toFixed(3);
+  const hue = 55 - 12 * t;
+  const fillGradient = `linear-gradient(180deg, oklch(${lTop} ${cTop} ${hue}) 0%, oklch(${lBot} ${cBot} ${hue - 5}) 100%)`;
+  const meniscusColor = `oklch(${(parseFloat(lTop) + 0.05).toFixed(3)} ${cTop} ${hue + 5})`;
+
   return (
-    <div className="relative mx-auto flex h-72 w-full max-w-[200px] flex-col items-center">
-      {/* Cap — lifts off and floats aside when working */}
+    <div className="relative mx-auto flex h-72 w-full max-w-[260px] flex-col items-center">
+      {/* Plumber buddy — perched on the right side of the tube, replaces the cap. */}
       <div
-        className="relative z-10 flex flex-col items-center transition-all duration-700 ease-out"
+        className="pointer-events-none absolute right-[4%] top-0 z-30"
         style={{
-          transform: working
-            ? "translate(64px, -8px) rotate(22deg)"
-            : "translate(0,0) rotate(0deg)",
+          transform: working ? "translateY(-2px) rotate(-4deg)" : "translateY(0) rotate(0)",
+          transition: "transform 600ms ease-out",
         }}
       >
-        <div className="h-10 w-20 rounded-t-md bg-rind shadow-[inset_0_-4px_0_rgba(0,0,0,0.08)]" />
-        <div className="-mt-1 h-2 w-24 rounded-sm bg-rind/80" />
+        <svg width="58" height="84" viewBox="0 0 58 84" fill="none" aria-hidden>
+          {/* hard hat */}
+          <path d="M10 24 Q29 6 48 24 L50 28 H8 Z" fill="oklch(0.78 0.17 55)" stroke="oklch(0.45 0.16 38)" strokeWidth="1.5" />
+          <rect x="6" y="26" width="46" height="4" rx="1.5" fill="oklch(0.55 0.18 38)" />
+          <rect x="27" y="10" width="4" height="6" fill="oklch(0.55 0.18 38)" />
+          {/* face */}
+          <circle cx="29" cy="38" r="9" fill="oklch(0.86 0.06 60)" stroke="oklch(0.45 0.12 40)" strokeWidth="1" />
+          {/* mustache */}
+          <path d="M23 40 Q29 44 35 40" stroke="oklch(0.32 0.04 40)" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+          {/* eyes */}
+          <circle cx="26" cy="36" r="1" fill="oklch(0.22 0.04 50)" />
+          <circle cx="32" cy="36" r="1" fill="oklch(0.22 0.04 50)" />
+          {/* body — overalls */}
+          <path d="M18 48 H40 L42 70 Q42 76 36 76 H22 Q16 76 16 70 Z" fill="oklch(0.55 0.10 250)" stroke="oklch(0.30 0.08 250)" strokeWidth="1.2" />
+          <circle cx="24" cy="54" r="1.4" fill="oklch(0.82 0.12 70)" />
+          <circle cx="34" cy="54" r="1.4" fill="oklch(0.82 0.12 70)" />
+          {/* arm + wrench, wiggles when working */}
+          <g style={working ? { animation: "beaker-tilt 1.4s ease-in-out infinite", transformOrigin: "18px 50px" } : undefined}>
+            <path d="M18 50 Q8 54 6 64" stroke="oklch(0.86 0.06 60)" strokeWidth="5" strokeLinecap="round" fill="none" />
+            <rect x="-1" y="62" width="12" height="3" rx="1" fill="oklch(0.65 0.02 250)" />
+            <path d="M-3 60 H3 V68 H-3 Z" fill="oklch(0.55 0.02 250)" />
+          </g>
+        </svg>
       </div>
 
       {/* Beaker pouring chemical liquid — only when working.
-          Mirrored to the left side of the tube and tilted toward the LEFT,
-          spout angled back over the tube. */}
+          Sits FAR LEFT of the tube and tilts toward the right so the spout pours into it. */}
       {working && (
-        <div
-          className="pointer-events-none absolute left-[58%] -top-3 z-20"
-        >
+        <div className="pointer-events-none absolute right-[64%] top-0 z-20">
           <div
             style={{
               animation: "beaker-tilt 4s ease-in-out infinite",
-              transformOrigin: "10% 90%",
+              transformOrigin: "90% 90%",
             }}
           >
             <svg width="110" height="86" viewBox="0 0 110 86" fill="none" aria-hidden>
-              {/* Steam wisps rising off the tilted body */}
               <path
-                d="M58 8 Q62 0 66 8 T74 8"
+                d="M30 8 Q34 0 38 8 T46 8"
                 stroke="oklch(0.78 0.04 60)"
                 strokeWidth="1.5"
                 strokeLinecap="round"
@@ -607,7 +633,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
                 style={{ animation: "steam 2.2s ease-in-out infinite" }}
               />
               <path
-                d="M74 12 Q78 4 82 12"
+                d="M46 12 Q50 4 54 12"
                 stroke="oklch(0.78 0.04 60)"
                 strokeWidth="1.5"
                 strokeLinecap="round"
@@ -616,7 +642,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
                 style={{ animation: "steam 2.6s ease-in-out 0.4s infinite" }}
               />
 
-              <g transform="translate(20 14) rotate(48 30 32)">
+              <g transform="translate(20 14) rotate(-48 30 32)">
                 <path
                   d="M6 4 H54 V10 L48 56 Q46 64 38 64 H22 Q14 64 12 56 L6 10 Z"
                   fill="oklch(0.97 0.01 75)"
@@ -629,15 +655,15 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
                   fill="oklch(0.74 0.16 55)"
                 />
                 <ellipse cx="30" cy="22" rx="21" ry="3" fill="oklch(0.82 0.16 60)" />
-                <line x1="46" y1="32" x2="50" y2="32" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
-                <line x1="47" y1="42" x2="50" y2="42" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
-                <path d="M6 4 Q2 6 4 12" stroke="oklch(0.55 0.18 38)" strokeWidth="2" fill="none" strokeLinecap="round" />
-                <rect x="12" y="14" width="2" height="38" rx="1" fill="white" opacity="0.55" />
+                <line x1="10" y1="32" x2="14" y2="32" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
+                <line x1="10" y1="42" x2="13" y2="42" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
+                <path d="M54 4 Q58 6 56 12" stroke="oklch(0.55 0.18 38)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <rect x="46" y="14" width="2" height="38" rx="1" fill="white" opacity="0.55" />
               </g>
             </svg>
 
             <div
-              className="absolute -left-[6px] top-[54px] h-12 w-[5px] rounded-full"
+              className="absolute right-[6px] top-[54px] h-12 w-[5px] rounded-full"
               style={{
                 background:
                   "linear-gradient(180deg, oklch(0.85 0.16 65) 0%, oklch(0.7 0.18 50) 100%)",
@@ -647,7 +673,7 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               }}
             />
             <div
-              className="absolute -left-[8px] top-[54px] size-[7px] rounded-full bg-zest"
+              className="absolute right-[4px] top-[54px] size-[7px] rounded-full bg-zest"
               style={{
                 boxShadow: "0 0 6px oklch(0.82 0.16 60 / 0.7)",
                 animation: "droplet 0.9s linear infinite",
@@ -657,27 +683,26 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
         </div>
       )}
 
-
       {/* Tube body */}
       <div
-        className={`relative mt-2 h-48 w-24 overflow-hidden rounded-b-2xl rounded-t-md bg-paper ring-1 ring-border ${
+        className={`relative mt-12 h-48 w-24 overflow-hidden rounded-b-2xl rounded-t-md bg-paper ring-1 ring-border ${
           working ? "shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-rind)_18%,transparent)]" : ""
         }`}
       >
         {/* Balm fill */}
         <div
-          className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out"
+          className="absolute inset-x-0 bottom-0 transition-[height,background] duration-700 ease-out"
           style={{
             height: `${visibleFill}%`,
-            background:
-              "linear-gradient(180deg, oklch(0.82 0.16 60) 0%, oklch(0.68 0.18 45) 100%)",
+            background: fillGradient,
           }}
         >
-          {/* meniscus / surface */}
-          <div className="absolute -top-1 left-0 right-0 h-2 rounded-full bg-zest/70 blur-[1px]" />
+          <div
+            className="absolute -top-1 left-0 right-0 h-2 rounded-full blur-[1px]"
+            style={{ background: meniscusColor, opacity: 0.75 }}
+          />
           {working && (
             <>
-              {/* ripple where stream lands */}
               <div
                 className="absolute left-1/2 -top-1 size-6 -translate-x-1/2 rounded-full border border-zest/70"
                 style={{ animation: "ripple 1.4s ease-out infinite" }}
@@ -688,18 +713,15 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               />
             </>
           )}
-          {/* inner shine */}
           <div
             className="absolute left-2 top-2 h-10 w-1.5 rounded-full bg-white/35"
             style={{ animation: "shine 3s ease-in-out infinite" }}
           />
         </div>
 
-        {/* Tube highlights */}
         <div className="pointer-events-none absolute left-2 top-0 h-full w-1.5 rounded-full bg-white/40" />
         <div className="pointer-events-none absolute right-3 top-0 h-full w-0.5 rounded-full bg-ink/5" />
 
-        {/* Label band */}
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y border-rind/30 bg-paper/80 py-1 text-center backdrop-blur-sm">
           <span className="font-serif text-[10px] italic tracking-wide text-rind whitespace-pre-line">
             {"R2\n"}
@@ -707,7 +729,6 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
         </div>
       </div>
 
-      {/* Base */}
       <div className="h-3 w-28 rounded-b-lg bg-rind/80" />
       <div className="mt-3 text-center text-[10px] font-medium uppercase tracking-[0.22em] text-husk">
         {working ? "Pouring…" : `${Math.round(clamped)}% full`}
