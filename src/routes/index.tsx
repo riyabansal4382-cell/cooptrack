@@ -206,6 +206,12 @@ function Index() {
   const doneCount = tasks.filter((t) => t.done).length;
   const fillPct = tasks.length ? (doneCount / tasks.length) * 100 : 0;
 
+  // Weekly completed tasks (Mon..Sun). Past days are seeded; today reflects live doneCount.
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const [weeklyHistory] = useState<number[]>([4, 3, 5, 2, 4, 1, 2]);
+  const weekSeries = weeklyHistory.map((v, i) => (i === todayIdx ? doneCount : i > todayIdx ? 0 : v));
+
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Sticky header with live timer */}
