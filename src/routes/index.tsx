@@ -206,6 +206,12 @@ function Index() {
   const doneCount = tasks.filter((t) => t.done).length;
   const fillPct = tasks.length ? (doneCount / tasks.length) * 100 : 0;
 
+  // Weekly completed tasks (Mon..Sun). Past days are seeded; today reflects live doneCount.
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const [weeklyHistory] = useState<number[]>([4, 3, 5, 2, 4, 1, 2]);
+  const weekSeries = weeklyHistory.map((v, i) => (i === todayIdx ? doneCount : i > todayIdx ? 0 : v));
+
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Sticky header with live timer */}
@@ -334,57 +340,63 @@ function Index() {
               <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-husk">
                 Today's objectives
               </h3>
-              <ul className="space-y-2">
-                {tasks.map((t) => (
-                  <li
-                    key={t.id}
-                    className="group flex items-center gap-3 rounded-xl bg-paper p-3 ring-1 ring-border transition hover:bg-cream"
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+                <div className="space-y-3">
+                  <ul className="space-y-2">
+                    {tasks.map((t) => (
+                      <li
+                        key={t.id}
+                        className="group flex items-center gap-3 rounded-xl bg-paper p-3 ring-1 ring-border transition hover:bg-cream"
+                      >
+                        <button
+                          onClick={() => toggleTask(t.id)}
+                          className="grid size-5 shrink-0 place-items-center rounded border border-border bg-paper transition group-hover:border-rind"
+                          aria-label={t.done ? "Mark task incomplete" : "Mark task complete"}
+                        >
+                          {t.done && <div className="size-3 rounded-sm bg-rind" />}
+                        </button>
+                        <span
+                          className={`flex-1 text-sm ${
+                            t.done ? "text-husk line-through decoration-balm" : "text-ink"
+                          }`}
+                        >
+                          {t.label}
+                        </span>
+                        <button
+                          onClick={() => removeTask(t.id)}
+                          className="text-xs text-husk opacity-0 transition hover:text-rind group-hover:opacity-100"
+                          aria-label="Remove task"
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      addTask();
+                    }}
+                    className="flex gap-2"
                   >
+                    <input
+                      value={newTask}
+                      onChange={(e) => setNewTask(e.target.value)}
+                      placeholder="+ Add new task"
+                      className="flex-1 rounded-xl border border-dashed border-border bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-husk focus:border-rind focus:outline-none"
+                    />
                     <button
-                      onClick={() => toggleTask(t.id)}
-                      className="grid size-5 shrink-0 place-items-center rounded border border-border bg-paper transition group-hover:border-rind"
-                      aria-label={t.done ? "Mark task incomplete" : "Mark task complete"}
+                      type="submit"
+                      className="rounded-xl bg-rind px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
                     >
-                      {t.done && <div className="size-3 rounded-sm bg-rind" />}
+                      Add
                     </button>
-                    <span
-                      className={`flex-1 text-sm ${
-                        t.done ? "text-husk line-through decoration-balm" : "text-ink"
-                      }`}
-                    >
-                      {t.label}
-                    </span>
-                    <button
-                      onClick={() => removeTask(t.id)}
-                      className="text-xs text-husk opacity-0 transition hover:text-rind group-hover:opacity-100"
-                      aria-label="Remove task"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  addTask();
-                }}
-                className="flex gap-2"
-              >
-                <input
-                  value={newTask}
-                  onChange={(e) => setNewTask(e.target.value)}
-                  placeholder="+ Add new task"
-                  className="flex-1 rounded-xl border border-dashed border-border bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-husk focus:border-rind focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="rounded-xl bg-rind px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-                >
-                  Add
-                </button>
-              </form>
+                  </form>
+                </div>
+                <WeeklyTaskChart completed={weekSeries} todayIdx={todayIdx} />
+              </div>
             </section>
+
           </div>
 
           {/* Right: GPA + schedule */}
@@ -1041,3 +1053,115 @@ function MonthCalendar({
     </div>
   );
 }
+
+function WeeklyTaskChart({ completed, todayIdx }: { completed: number[]; todayIdx: number }) {
+  const labels = ["M", "T", "W", "T", "F", "S", "S"];
+  const n = completed.length;
+  // Linear regression over completed series (intended pace trendline)
+  const xs = completed.map((_, i) => i);
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = completed.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (xs[i] - mx) * (completed[i] - my);
+    den += (xs[i] - mx) ** 2;
+  }
+  const m = den ? num / den : 0;
+  const b = my - m * mx;
+  const regression = xs.map((x) => Math.max(0, m * x + b));
+
+  const maxY = Math.max(5, ...completed, ...regression) * 1.15;
+  const W = 280;
+  const H = 180;
+  const padL = 24;
+  const padR = 12;
+  const padT = 14;
+  const padB = 24;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+  const xAt = (i: number) => padL + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+  const yAt = (v: number) => padT + innerH - (v / maxY) * innerH;
+  const barW = (innerW / n) * 0.55;
+
+  const linePath = regression
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${xAt(i).toFixed(1)} ${yAt(v).toFixed(1)}`)
+    .join(" ");
+
+  const weekTotal = completed.reduce((a, b) => a + b, 0);
+  const intendedTotal = Math.round(regression.reduce((a, b) => a + b, 0));
+
+  return (
+    <div className="rounded-2xl bg-paper p-4 ring-1 ring-border">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <h4 className="font-serif text-sm font-medium text-ink">This week</h4>
+        <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-husk">
+          {weekTotal} done · {intendedTotal} intended
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Weekly tasks completed with intended trendline">
+        {/* gridlines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((p) => (
+          <line
+            key={p}
+            x1={padL}
+            x2={W - padR}
+            y1={padT + innerH * p}
+            y2={padT + innerH * p}
+            stroke="var(--color-border)"
+            strokeWidth={p === 1 ? 1 : 0.5}
+            strokeDasharray={p === 1 ? "0" : "2 3"}
+          />
+        ))}
+        {/* bars */}
+        {completed.map((v, i) => {
+          const isToday = i === todayIdx;
+          const isFuture = i > todayIdx;
+          const y = yAt(v);
+          const h = padT + innerH - y;
+          return (
+            <g key={i}>
+              <rect
+                x={xAt(i) - barW / 2}
+                y={y}
+                width={barW}
+                height={Math.max(0.5, h)}
+                rx={3}
+                fill={isFuture ? "var(--color-cream)" : isToday ? "var(--color-rind)" : "var(--color-balm)"}
+                opacity={isFuture ? 0.7 : 1}
+              />
+              <text
+                x={xAt(i)}
+                y={H - 8}
+                textAnchor="middle"
+                fontSize={9}
+                fill="var(--color-husk)"
+                fontFamily="var(--font-sans)"
+                style={{ letterSpacing: "0.08em" }}
+              >
+                {labels[i]}
+              </text>
+            </g>
+          );
+        })}
+        {/* regression line */}
+        <path d={linePath} fill="none" stroke="var(--color-rind)" strokeWidth={1.75} strokeDasharray="4 3" />
+        {regression.map((v, i) => (
+          <circle key={i} cx={xAt(i)} cy={yAt(v)} r={2.25} fill="var(--color-rind)" />
+        ))}
+      </svg>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] uppercase tracking-[0.14em] text-husk">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block size-2 rounded-sm bg-balm" /> Completed
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block size-2 rounded-sm bg-rind" /> Today
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <svg width="14" height="6"><line x1="0" y1="3" x2="14" y2="3" stroke="var(--color-rind)" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
+          Intended (LR)
+        </span>
+      </div>
+    </div>
+  );
+}
+
