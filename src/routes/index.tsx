@@ -340,7 +340,7 @@ function Index() {
               <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-husk">
                 Today's objectives
               </h3>
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
                 <div className="space-y-3">
                   <ul className="space-y-2">
                     {tasks.map((t) => (
