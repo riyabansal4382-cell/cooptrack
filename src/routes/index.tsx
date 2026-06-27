@@ -1053,3 +1053,115 @@ function MonthCalendar({
     </div>
   );
 }
+
+function WeeklyTaskChart({ completed, todayIdx }: { completed: number[]; todayIdx: number }) {
+  const labels = ["M", "T", "W", "T", "F", "S", "S"];
+  const n = completed.length;
+  // Linear regression over completed series (intended pace trendline)
+  const xs = completed.map((_, i) => i);
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = completed.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (xs[i] - mx) * (completed[i] - my);
+    den += (xs[i] - mx) ** 2;
+  }
+  const m = den ? num / den : 0;
+  const b = my - m * mx;
+  const regression = xs.map((x) => Math.max(0, m * x + b));
+
+  const maxY = Math.max(5, ...completed, ...regression) * 1.15;
+  const W = 280;
+  const H = 180;
+  const padL = 24;
+  const padR = 12;
+  const padT = 14;
+  const padB = 24;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+  const xAt = (i: number) => padL + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+  const yAt = (v: number) => padT + innerH - (v / maxY) * innerH;
+  const barW = (innerW / n) * 0.55;
+
+  const linePath = regression
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${xAt(i).toFixed(1)} ${yAt(v).toFixed(1)}`)
+    .join(" ");
+
+  const weekTotal = completed.reduce((a, b) => a + b, 0);
+  const intendedTotal = Math.round(regression.reduce((a, b) => a + b, 0));
+
+  return (
+    <div className="rounded-2xl bg-paper p-4 ring-1 ring-border">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <h4 className="font-serif text-sm font-medium text-ink">This week</h4>
+        <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-husk">
+          {weekTotal} done · {intendedTotal} intended
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Weekly tasks completed with intended trendline">
+        {/* gridlines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((p) => (
+          <line
+            key={p}
+            x1={padL}
+            x2={W - padR}
+            y1={padT + innerH * p}
+            y2={padT + innerH * p}
+            stroke="var(--color-border)"
+            strokeWidth={p === 1 ? 1 : 0.5}
+            strokeDasharray={p === 1 ? "0" : "2 3"}
+          />
+        ))}
+        {/* bars */}
+        {completed.map((v, i) => {
+          const isToday = i === todayIdx;
+          const isFuture = i > todayIdx;
+          const y = yAt(v);
+          const h = padT + innerH - y;
+          return (
+            <g key={i}>
+              <rect
+                x={xAt(i) - barW / 2}
+                y={y}
+                width={barW}
+                height={Math.max(0.5, h)}
+                rx={3}
+                fill={isFuture ? "var(--color-cream)" : isToday ? "var(--color-rind)" : "var(--color-balm)"}
+                opacity={isFuture ? 0.7 : 1}
+              />
+              <text
+                x={xAt(i)}
+                y={H - 8}
+                textAnchor="middle"
+                fontSize={9}
+                fill="var(--color-husk)"
+                fontFamily="var(--font-sans)"
+                style={{ letterSpacing: "0.08em" }}
+              >
+                {labels[i]}
+              </text>
+            </g>
+          );
+        })}
+        {/* regression line */}
+        <path d={linePath} fill="none" stroke="var(--color-rind)" strokeWidth={1.75} strokeDasharray="4 3" />
+        {regression.map((v, i) => (
+          <circle key={i} cx={xAt(i)} cy={yAt(v)} r={2.25} fill="var(--color-rind)" />
+        ))}
+      </svg>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] uppercase tracking-[0.14em] text-husk">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block size-2 rounded-sm bg-balm" /> Completed
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block size-2 rounded-sm bg-rind" /> Today
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <svg width="14" height="6"><line x1="0" y1="3" x2="14" y2="3" stroke="var(--color-rind)" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
+          Intended (LR)
+        </span>
+      </div>
+    </div>
+  );
+}
+
