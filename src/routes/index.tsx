@@ -618,12 +618,6 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
               transform: "rotate(-8deg)",
             }}
           >
-            className="relative"
-            style={{
-              animation: "beaker-tilt 4s ease-in-out infinite",
-              transformOrigin: "50% 50%",
-            }}
-          >
             <svg width="140" height="70" viewBox="0 0 140 70" fill="none" aria-hidden>
               <defs>
                 <radialGradient id="cloudGrad" cx="50%" cy="40%" r="60%">
