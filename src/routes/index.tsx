@@ -325,7 +325,12 @@ function Index() {
 
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setRunning((r) => !r)}
+                onClick={() =>
+                  setRunning((r) => {
+                    if (!r) sessionStartRef.current = Date.now();
+                    return !r;
+                  })
+                }
                 className="grid size-9 place-items-center rounded-full bg-ink text-paper transition active:scale-95 hover:bg-rind"
                 aria-label={running ? "Pause timer" : "Start timer"}
               >
