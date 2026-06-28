@@ -17,6 +17,24 @@ export const Route = createFileRoute("/")({
 
 type Course = { id: string; name: string; credits: number; grade: string };
 type Task = { id: string; label: string; done: boolean };
+type SavedSession = {
+  id: string;
+  dateISO: string;
+  startedAt: number;
+  durationMin: number;
+  tasks: string[];
+};
+
+const SESSIONS_KEY = "balm.sessions.v1";
+function loadSessions(): SavedSession[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(SESSIONS_KEY);
+    return raw ? (JSON.parse(raw) as SavedSession[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 const GRADE_POINTS: Record<string, number> = {
   "A+": 4.0, A: 4.0, "A-": 3.7,
