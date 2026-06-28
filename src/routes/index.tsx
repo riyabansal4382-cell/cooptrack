@@ -609,12 +609,13 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
 
       {/* Rain cloud pouring balm — appears only while working. */}
       {working && (
-        <div className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2">
+        <div className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2" style={{ top: "-38px" }}>
           <div
             className="relative"
             style={{
               animation: "beaker-tilt 4s ease-in-out infinite",
               transformOrigin: "50% 50%",
+              transform: "rotate(-8deg)",
             }}
           >
             <svg width="140" height="70" viewBox="0 0 140 70" fill="none" aria-hidden>
