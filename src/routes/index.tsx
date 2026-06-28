@@ -248,10 +248,34 @@ function Index() {
   const doneCount = tasks.filter((t) => t.done).length;
   const fillPct = tasks.length ? (doneCount / tasks.length) * 100 : 0;
 
+  // Mirror tasks into a ref so the timer interval can snapshot them on completion
+  useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+
   // Weekly completed tasks (Mon..Sun). Past days are seeded; today reflects live doneCount.
   const todayIdx = (new Date().getDay() + 6) % 7;
   const [weeklyHistory] = useState<number[]>([4, 3, 5, 2, 4, 1, 2]);
   const weekSeries = weeklyHistory.map((v, i) => (i === todayIdx ? doneCount : i > todayIdx ? 0 : v));
+
+  // Streak — consecutive days (ending today or yesterday) with at least one session
+  const todayISO = toISO(new Date());
+  const streak = useMemo(() => {
+    if (!savedSessions.length) return 0;
+    const days = new Set(savedSessions.map((s) => s.dateISO));
+    const d = new Date();
+    if (!days.has(toISO(d))) d.setDate(d.getDate() - 1);
+    let count = 0;
+    while (days.has(toISO(d))) {
+      count++;
+      d.setDate(d.getDate() - 1);
+    }
+    return count;
+  }, [savedSessions]);
+
+  const todaySessions = useMemo(
+    () => savedSessions.filter((s) => s.dateISO === todayISO),
+    [savedSessions, todayISO],
+  );
+  const todayMinutes = todaySessions.reduce((a, b) => a + b.durationMin, 0);
 
 
   return (
