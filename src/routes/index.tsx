@@ -357,6 +357,12 @@ function Index() {
           </div>
 
           <div className="hidden items-center gap-4 lg:flex">
+            <span className="flex items-center gap-1.5 rounded-full bg-rind/10 px-2.5 py-1 text-sm text-rind">
+              <span>🔥</span>
+              <span className="font-medium tabular-nums">{streak}</span>
+              <span className="text-xs uppercase tracking-[0.14em]">streak</span>
+            </span>
+            <div className="h-4 w-px bg-border" />
             <span className="text-sm text-husk">
               Today: <span className="font-medium text-ink">{sessions} sessions</span>
             </span>
@@ -367,6 +373,7 @@ function Index() {
           </div>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
