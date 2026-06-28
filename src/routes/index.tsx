@@ -614,6 +614,12 @@ function Index() {
           />
         )}
 
+        {selectedSession && (
+          <SessionDetailModal session={selectedSession} onClose={() => setSelectedSession(null)} />
+        )}
+
+
+
         {balmFullscreen && (
           <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-xl animate-fade-in">
             <div className="flex items-center justify-between border-b border-border px-6 py-4">
