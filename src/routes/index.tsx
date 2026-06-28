@@ -591,104 +591,70 @@ function LipBalm({ fillPct, working }: { fillPct: number; working: boolean }) {
 
   return (
     <div className="relative mx-auto flex h-72 w-full max-w-[260px] flex-col items-center">
-      {/* Plumber buddy — perched on the right side of the tube, replaces the cap. */}
+      {/* Cap — sits on top of the tube when NOT working; lifts off and floats aside when working. */}
       <div
-        className="pointer-events-none absolute right-[4%] top-0 z-30"
+        className="pointer-events-none absolute left-1/2 z-30"
         style={{
-          transform: working ? "translateY(-2px) rotate(-4deg)" : "translateY(0) rotate(0)",
-          transition: "transform 600ms ease-out",
+          top: working ? "-6px" : "34px",
+          transform: working
+            ? "translateX(-50%) translateY(-26px) rotate(-10deg)"
+            : "translateX(-50%) translateY(0) rotate(0deg)",
+          transition: "transform 700ms cubic-bezier(.5,1.6,.4,1), top 700ms cubic-bezier(.5,1.6,.4,1)",
         }}
+        aria-hidden
       >
-        <svg width="58" height="84" viewBox="0 0 58 84" fill="none" aria-hidden>
-          {/* hard hat */}
-          <path d="M10 24 Q29 6 48 24 L50 28 H8 Z" fill="oklch(0.78 0.17 55)" stroke="oklch(0.45 0.16 38)" strokeWidth="1.5" />
-          <rect x="6" y="26" width="46" height="4" rx="1.5" fill="oklch(0.55 0.18 38)" />
-          <rect x="27" y="10" width="4" height="6" fill="oklch(0.55 0.18 38)" />
-          {/* face */}
-          <circle cx="29" cy="38" r="9" fill="oklch(0.86 0.06 60)" stroke="oklch(0.45 0.12 40)" strokeWidth="1" />
-          {/* mustache */}
-          <path d="M23 40 Q29 44 35 40" stroke="oklch(0.32 0.04 40)" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-          {/* eyes */}
-          <circle cx="26" cy="36" r="1" fill="oklch(0.22 0.04 50)" />
-          <circle cx="32" cy="36" r="1" fill="oklch(0.22 0.04 50)" />
-          {/* body — overalls */}
-          <path d="M18 48 H40 L42 70 Q42 76 36 76 H22 Q16 76 16 70 Z" fill="oklch(0.55 0.10 250)" stroke="oklch(0.30 0.08 250)" strokeWidth="1.2" />
-          <circle cx="24" cy="54" r="1.4" fill="oklch(0.82 0.12 70)" />
-          <circle cx="34" cy="54" r="1.4" fill="oklch(0.82 0.12 70)" />
-          {/* arm + wrench, wiggles when working */}
-          <g style={working ? { animation: "beaker-tilt 1.4s ease-in-out infinite", transformOrigin: "18px 50px" } : undefined}>
-            <path d="M18 50 Q8 54 6 64" stroke="oklch(0.86 0.06 60)" strokeWidth="5" strokeLinecap="round" fill="none" />
-            <rect x="-1" y="62" width="12" height="3" rx="1" fill="oklch(0.65 0.02 250)" />
-            <path d="M-3 60 H3 V68 H-3 Z" fill="oklch(0.55 0.02 250)" />
-          </g>
-        </svg>
+        <div className="h-5 w-[104px] rounded-t-xl rounded-b-sm bg-rind shadow-[inset_0_-3px_0_oklch(0.42_0.16_38)]" />
+        <div className="mx-auto h-1 w-[92px] rounded-full bg-ink/15" />
       </div>
 
-      {/* Beaker pouring chemical liquid — only when working.
-          Sits FAR LEFT of the tube and tilts toward the right so the spout pours into it. */}
+      {/* Rain cloud pouring balm — appears only while working. */}
       {working && (
-        <div className="pointer-events-none absolute right-[64%] top-0 z-20">
+        <div className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2">
           <div
+            className="relative"
             style={{
               animation: "beaker-tilt 4s ease-in-out infinite",
-              transformOrigin: "90% 90%",
+              transformOrigin: "50% 50%",
             }}
           >
-            <svg width="110" height="86" viewBox="0 0 110 86" fill="none" aria-hidden>
-              <path
-                d="M30 8 Q34 0 38 8 T46 8"
-                stroke="oklch(0.78 0.04 60)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                fill="none"
-                opacity="0.6"
-                style={{ animation: "steam 2.2s ease-in-out infinite" }}
-              />
-              <path
-                d="M46 12 Q50 4 54 12"
-                stroke="oklch(0.78 0.04 60)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                fill="none"
-                opacity="0.5"
-                style={{ animation: "steam 2.6s ease-in-out 0.4s infinite" }}
-              />
-
-              <g transform="translate(20 14) rotate(-48 30 32)">
-                <path
-                  d="M6 4 H54 V10 L48 56 Q46 64 38 64 H22 Q14 64 12 56 L6 10 Z"
-                  fill="oklch(0.97 0.01 75)"
-                  stroke="oklch(0.55 0.18 38)"
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M9 22 L51 22 L46 56 Q44 62 38 62 H22 Q16 62 14 56 Z"
-                  fill="oklch(0.74 0.16 55)"
-                />
-                <ellipse cx="30" cy="22" rx="21" ry="3" fill="oklch(0.82 0.16 60)" />
-                <line x1="10" y1="32" x2="14" y2="32" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
-                <line x1="10" y1="42" x2="13" y2="42" stroke="oklch(0.55 0.18 38)" strokeWidth="1" />
-                <path d="M54 4 Q58 6 56 12" stroke="oklch(0.55 0.18 38)" strokeWidth="2" fill="none" strokeLinecap="round" />
-                <rect x="46" y="14" width="2" height="38" rx="1" fill="white" opacity="0.55" />
-              </g>
+            <svg width="140" height="70" viewBox="0 0 140 70" fill="none" aria-hidden>
+              <defs>
+                <radialGradient id="cloudGrad" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="oklch(0.99 0.005 75)" />
+                  <stop offset="100%" stopColor="oklch(0.9 0.02 60)" />
+                </radialGradient>
+              </defs>
+              {/* fluffy cloud */}
+              <ellipse cx="42" cy="40" rx="24" ry="18" fill="url(#cloudGrad)" stroke="oklch(0.55 0.18 38)" strokeWidth="1.5" />
+              <ellipse cx="72" cy="32" rx="28" ry="22" fill="url(#cloudGrad)" stroke="oklch(0.55 0.18 38)" strokeWidth="1.5" />
+              <ellipse cx="104" cy="42" rx="22" ry="16" fill="url(#cloudGrad)" stroke="oklch(0.55 0.18 38)" strokeWidth="1.5" />
+              <ellipse cx="70" cy="46" rx="40" ry="12" fill="url(#cloudGrad)" />
+              {/* highlight */}
+              <ellipse cx="58" cy="24" rx="10" ry="3" fill="white" opacity="0.7" />
             </svg>
 
+            {/* falling balm droplets */}
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="absolute size-[6px] rounded-full bg-zest"
+                style={{
+                  left: `${28 + i * 16}%`,
+                  top: "58px",
+                  boxShadow: "0 0 6px oklch(0.82 0.16 60 / 0.7)",
+                  animation: `droplet 0.9s linear ${i * 0.18}s infinite`,
+                }}
+              />
+            ))}
+            {/* central pour stream */}
             <div
-              className="absolute right-[6px] top-[54px] h-12 w-[5px] rounded-full"
+              className="absolute left-1/2 top-[58px] h-10 w-[5px] -translate-x-1/2 rounded-full"
               style={{
                 background:
                   "linear-gradient(180deg, oklch(0.85 0.16 65) 0%, oklch(0.7 0.18 50) 100%)",
                 boxShadow: "0 0 8px oklch(0.82 0.16 60 / 0.6)",
                 animation: "stream-pulse 1s ease-in-out infinite",
                 transformOrigin: "top center",
-              }}
-            />
-            <div
-              className="absolute right-[4px] top-[54px] size-[7px] rounded-full bg-zest"
-              style={{
-                boxShadow: "0 0 6px oklch(0.82 0.16 60 / 0.7)",
-                animation: "droplet 0.9s linear infinite",
               }}
             />
           </div>
