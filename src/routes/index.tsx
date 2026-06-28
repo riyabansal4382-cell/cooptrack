@@ -376,6 +376,17 @@ function Index() {
 
 
       <main className="mx-auto max-w-7xl px-6 py-12">
+        <section className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+          <TodayPanel
+            streak={streak}
+            sessionsToday={todaySessions.length}
+            minutesToday={todayMinutes}
+            tasksDone={doneCount}
+            tasksTotal={tasks.length}
+            nextEvent={(eventsByDate.get(todayISO) ?? [])[0]}
+          />
+          <BalmShelf sessions={savedSessions} onSelect={setSelectedSession} />
+        </section>
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
           {/* Left: Lip balm progress + tasks */}
           <div className="space-y-8 lg:col-span-4">
