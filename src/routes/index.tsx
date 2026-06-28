@@ -105,6 +105,20 @@ function Index() {
   const [sessions, setSessions] = useState(0);
   const intervalRef = useRef<number | null>(null);
 
+  // Persisted session log (each finished focus run becomes a stored balm tube)
+  const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
+  const [selectedSession, setSelectedSession] = useState<SavedSession | null>(null);
+  useEffect(() => { setSavedSessions(loadSessions()); }, []);
+  useEffect(() => {
+    try { window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(savedSessions)); } catch {}
+  }, [savedSessions]);
+
+  // Refs so the timer callback can read live state without restarting the interval
+  const tasksRef = useRef<Task[]>([]);
+  const sessionStartRef = useRef<number>(0);
+  const focusMinutesRef = useRef(focusMinutes);
+  useEffect(() => { focusMinutesRef.current = focusMinutes; }, [focusMinutes]);
+
   useEffect(() => {
     if (!running) return;
     intervalRef.current = window.setInterval(() => {
@@ -112,7 +126,17 @@ function Index() {
         if (s <= 1) {
           setRunning(false);
           setSessions((c) => c + 1);
-          return focusMinutes * 60;
+          const mins = focusMinutesRef.current;
+          const completedTasks = tasksRef.current.filter((t) => t.done).map((t) => t.label);
+          const newSession: SavedSession = {
+            id: crypto.randomUUID(),
+            dateISO: toISO(new Date()),
+            startedAt: sessionStartRef.current || Date.now(),
+            durationMin: mins,
+            tasks: completedTasks,
+          };
+          setSavedSessions((arr) => [newSession, ...arr]);
+          return mins * 60;
         }
         return s - 1;
       });
@@ -120,7 +144,7 @@ function Index() {
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
     };
-  }, [running, focusMinutes]);
+  }, [running]);
 
   // Keep clock in sync when user changes duration while idle
   useEffect(() => {
