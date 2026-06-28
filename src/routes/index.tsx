@@ -17,6 +17,24 @@ export const Route = createFileRoute("/")({
 
 type Course = { id: string; name: string; credits: number; grade: string };
 type Task = { id: string; label: string; done: boolean };
+type SavedSession = {
+  id: string;
+  dateISO: string;
+  startedAt: number;
+  durationMin: number;
+  tasks: string[];
+};
+
+const SESSIONS_KEY = "balm.sessions.v1";
+function loadSessions(): SavedSession[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(SESSIONS_KEY);
+    return raw ? (JSON.parse(raw) as SavedSession[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 const GRADE_POINTS: Record<string, number> = {
   "A+": 4.0, A: 4.0, "A-": 3.7,
@@ -87,6 +105,20 @@ function Index() {
   const [sessions, setSessions] = useState(0);
   const intervalRef = useRef<number | null>(null);
 
+  // Persisted session log (each finished focus run becomes a stored balm tube)
+  const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
+  const [selectedSession, setSelectedSession] = useState<SavedSession | null>(null);
+  useEffect(() => { setSavedSessions(loadSessions()); }, []);
+  useEffect(() => {
+    try { window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(savedSessions)); } catch {}
+  }, [savedSessions]);
+
+  // Refs so the timer callback can read live state without restarting the interval
+  const tasksRef = useRef<Task[]>([]);
+  const sessionStartRef = useRef<number>(0);
+  const focusMinutesRef = useRef(focusMinutes);
+  useEffect(() => { focusMinutesRef.current = focusMinutes; }, [focusMinutes]);
+
   useEffect(() => {
     if (!running) return;
     intervalRef.current = window.setInterval(() => {
@@ -94,7 +126,17 @@ function Index() {
         if (s <= 1) {
           setRunning(false);
           setSessions((c) => c + 1);
-          return focusMinutes * 60;
+          const mins = focusMinutesRef.current;
+          const completedTasks = tasksRef.current.filter((t) => t.done).map((t) => t.label);
+          const newSession: SavedSession = {
+            id: crypto.randomUUID(),
+            dateISO: toISO(new Date()),
+            startedAt: sessionStartRef.current || Date.now(),
+            durationMin: mins,
+            tasks: completedTasks,
+          };
+          setSavedSessions((arr) => [newSession, ...arr]);
+          return mins * 60;
         }
         return s - 1;
       });
@@ -102,7 +144,7 @@ function Index() {
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
     };
-  }, [running, focusMinutes]);
+  }, [running]);
 
   // Keep clock in sync when user changes duration while idle
   useEffect(() => {
@@ -206,10 +248,34 @@ function Index() {
   const doneCount = tasks.filter((t) => t.done).length;
   const fillPct = tasks.length ? (doneCount / tasks.length) * 100 : 0;
 
+  // Mirror tasks into a ref so the timer interval can snapshot them on completion
+  useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+
   // Weekly completed tasks (Mon..Sun). Past days are seeded; today reflects live doneCount.
   const todayIdx = (new Date().getDay() + 6) % 7;
   const [weeklyHistory] = useState<number[]>([4, 3, 5, 2, 4, 1, 2]);
   const weekSeries = weeklyHistory.map((v, i) => (i === todayIdx ? doneCount : i > todayIdx ? 0 : v));
+
+  // Streak — consecutive days (ending today or yesterday) with at least one session
+  const todayISO = toISO(new Date());
+  const streak = useMemo(() => {
+    if (!savedSessions.length) return 0;
+    const days = new Set(savedSessions.map((s) => s.dateISO));
+    const d = new Date();
+    if (!days.has(toISO(d))) d.setDate(d.getDate() - 1);
+    let count = 0;
+    while (days.has(toISO(d))) {
+      count++;
+      d.setDate(d.getDate() - 1);
+    }
+    return count;
+  }, [savedSessions]);
+
+  const todaySessions = useMemo(
+    () => savedSessions.filter((s) => s.dateISO === todayISO),
+    [savedSessions, todayISO],
+  );
+  const todayMinutes = todaySessions.reduce((a, b) => a + b.durationMin, 0);
 
 
   return (
@@ -259,7 +325,12 @@ function Index() {
 
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setRunning((r) => !r)}
+                onClick={() =>
+                  setRunning((r) => {
+                    if (!r) sessionStartRef.current = Date.now();
+                    return !r;
+                  })
+                }
                 className="grid size-9 place-items-center rounded-full bg-ink text-paper transition active:scale-95 hover:bg-rind"
                 aria-label={running ? "Pause timer" : "Start timer"}
               >
@@ -286,6 +357,12 @@ function Index() {
           </div>
 
           <div className="hidden items-center gap-4 lg:flex">
+            <span className="flex items-center gap-1.5 rounded-full bg-rind/10 px-2.5 py-1 text-sm text-rind">
+              <span>🔥</span>
+              <span className="font-medium tabular-nums">{streak}</span>
+              <span className="text-xs uppercase tracking-[0.14em]">streak</span>
+            </span>
+            <div className="h-4 w-px bg-border" />
             <span className="text-sm text-husk">
               Today: <span className="font-medium text-ink">{sessions} sessions</span>
             </span>
@@ -297,7 +374,19 @@ function Index() {
         </div>
       </header>
 
+
       <main className="mx-auto max-w-7xl px-6 py-12">
+        <section className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+          <TodayPanel
+            streak={streak}
+            sessionsToday={todaySessions.length}
+            minutesToday={todayMinutes}
+            tasksDone={doneCount}
+            tasksTotal={tasks.length}
+            nextEvent={(eventsByDate.get(todayISO) ?? [])[0]}
+          />
+          <BalmShelf sessions={savedSessions} onSelect={setSelectedSession} />
+        </section>
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
           {/* Left: Lip balm progress + tasks */}
           <div className="space-y-8 lg:col-span-4">
@@ -524,6 +613,12 @@ function Index() {
             onRemove={removeEvent}
           />
         )}
+
+        {selectedSession && (
+          <SessionDetailModal session={selectedSession} onClose={() => setSelectedSession(null)} />
+        )}
+
+
 
         {balmFullscreen && (
           <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-xl animate-fade-in">
@@ -1127,6 +1222,221 @@ function WeeklyTaskChart({ completed, todayIdx }: { completed: number[]; todayId
           <svg width="14" height="6"><line x1="0" y1="3" x2="14" y2="3" stroke="var(--color-rind)" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
           Intended (LR)
         </span>
+      </div>
+    </div>
+  );
+}
+
+function TodayPanel({
+  streak,
+  sessionsToday,
+  minutesToday,
+  tasksDone,
+  tasksTotal,
+  nextEvent,
+}: {
+  streak: number;
+  sessionsToday: number;
+  minutesToday: number;
+  tasksDone: number;
+  tasksTotal: number;
+  nextEvent?: ScheduleEvent;
+}) {
+  const today = new Date();
+  return (
+    <div className="rounded-3xl bg-paper p-6 ring-1 ring-border">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-husk">Today</p>
+          <h2 className="font-serif text-lg font-medium leading-tight">
+            {today.toLocaleDateString(undefined, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </h2>
+        </div>
+        <span
+          className="flex shrink-0 items-center gap-1.5 rounded-full bg-rind/10 px-3 py-1.5 text-rind"
+          title="Consecutive days with at least one finished session"
+        >
+          <span className="text-base leading-none">🔥</span>
+          <span className="text-sm font-medium tabular-nums">{streak}</span>
+          <span className="text-[10px] uppercase tracking-[0.16em]">streak</span>
+        </span>
+      </div>
+      <dl className="grid grid-cols-3 gap-2">
+        <Stat label="Sessions" value={String(sessionsToday)} />
+        <Stat label="Minutes" value={String(minutesToday)} />
+        <Stat label="Tasks" value={`${tasksDone}/${tasksTotal}`} />
+      </dl>
+      <div className="mt-4 rounded-2xl bg-cream p-3">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-husk">Next up</p>
+        {nextEvent ? (
+          <p className="mt-1 text-sm">
+            <span className="font-medium text-ink">{nextEvent.label}</span>{" "}
+            <span className="text-husk">· {nextEvent.time}</span>
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-husk">Nothing scheduled. Pick a task and go.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-cream p-3 text-center">
+      <div className="font-serif text-xl text-rind tabular-nums leading-none">{value}</div>
+      <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-husk">{label}</div>
+    </div>
+  );
+}
+
+function BalmShelf({
+  sessions,
+  onSelect,
+}: {
+  sessions: SavedSession[];
+  onSelect: (s: SavedSession) => void;
+}) {
+  return (
+    <div className="rounded-3xl bg-cream p-6 ring-1 ring-border">
+      <div className="mb-4 flex items-baseline justify-between">
+        <div>
+          <h2 className="font-serif text-lg font-medium">Balm shelf</h2>
+          <p className="text-xs text-husk">Each tube is a finished focus session — tap to inspect.</p>
+        </div>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-husk">
+          {sessions.length} stored
+        </span>
+      </div>
+      {sessions.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-paper/60 p-6 text-center text-sm text-husk">
+          Empty shelf. Finish a focus session and a fresh tube lands here.
+        </div>
+      ) : (
+        <div>
+          <div className="flex gap-3 overflow-x-auto pb-3">
+            {sessions.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onSelect(s)}
+                className="group flex shrink-0 flex-col items-center gap-1.5"
+                title={`${s.dateISO} · ${s.durationMin} min · ${s.tasks.length} tasks`}
+              >
+                <MiniTube durationMin={s.durationMin} taskCount={s.tasks.length} />
+                <span className="text-[10px] uppercase tracking-[0.14em] text-husk group-hover:text-rind">
+                  {new Date(s.dateISO + "T00:00:00").toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="h-1.5 rounded-full bg-rind/30" />
+          <div className="h-3 rounded-b-xl bg-rind/15" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniTube({ durationMin, taskCount }: { durationMin: number; taskCount: number }) {
+  const fill = Math.min(100, (durationMin / 60) * 100);
+  const t = Math.min(1, taskCount / 5);
+  const lTop = (0.86 - 0.18 * t).toFixed(3);
+  const lBot = (0.7 - 0.24 * t).toFixed(3);
+  const hue = 60 - 12 * t;
+  return (
+    <div className="relative h-16 w-8 overflow-hidden rounded-b-lg rounded-t-sm bg-paper ring-1 ring-border transition group-hover:ring-rind">
+      <div
+        className="absolute inset-x-0 bottom-0"
+        style={{
+          height: `${fill}%`,
+          background: `linear-gradient(180deg, oklch(${lTop} 0.15 ${hue}) 0%, oklch(${lBot} 0.17 ${hue - 5}) 100%)`,
+        }}
+      />
+      <div className="pointer-events-none absolute inset-x-1 top-1 h-6 w-1 rounded-full bg-white/40" />
+      <div className="absolute -top-1 inset-x-0.5 h-2 rounded-sm bg-rind/80" />
+    </div>
+  );
+}
+
+function SessionDetailModal({
+  session,
+  onClose,
+}: {
+  session: SavedSession;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-3xl bg-paper p-6 ring-1 ring-border"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-husk">Stored balm</p>
+            <h3 className="font-serif text-xl leading-tight">
+              {new Date(session.dateISO + "T00:00:00").toLocaleDateString(undefined, {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full border border-border bg-paper px-2 py-1 text-xs text-husk hover:border-rind hover:text-rind"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-cream p-3">
+            <div className="text-[10px] uppercase tracking-[0.14em] text-husk">Duration</div>
+            <div className="font-serif text-lg text-rind">{session.durationMin} min</div>
+          </div>
+          <div className="rounded-xl bg-cream p-3">
+            <div className="text-[10px] uppercase tracking-[0.14em] text-husk">Started</div>
+            <div className="font-serif text-lg text-rind">
+              {new Date(session.startedAt).toLocaleTimeString(undefined, {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="mt-5">
+          <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-husk">
+            Tasks ticked ({session.tasks.length})
+          </div>
+          {session.tasks.length === 0 ? (
+            <p className="rounded-xl bg-cream/60 p-3 text-sm text-husk">
+              No tasks were ticked during this session.
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {session.tasks.map((t, i) => (
+                <li
+                  key={i}
+                  className="flex items-center gap-2 rounded-lg bg-cream/60 px-3 py-2 text-sm text-ink"
+                >
+                  <span className="size-2 rounded-full bg-rind" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
