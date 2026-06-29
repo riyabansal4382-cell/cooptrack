@@ -1317,16 +1317,20 @@ function Stat({ label, value }: { label: string; value: string }) {
 function BalmShelf({
   sessions,
   onSelect,
+  onRename,
 }: {
   sessions: SavedSession[];
   onSelect: (s: SavedSession) => void;
+  onRename: (id: string, label: string) => void;
 }) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
   return (
     <div className="rounded-3xl bg-cream p-6 ring-1 ring-border">
       <div className="mb-4 flex items-baseline justify-between">
         <div>
           <h2 className="font-serif text-lg font-medium">Balm shelf</h2>
-          <p className="text-xs text-husk">Each tube is a finished focus session — tap to inspect.</p>
+          <p className="text-xs text-husk">Each tube is a finished focus session — tap to inspect, double-tap the label to rename.</p>
         </div>
         <span className="text-[10px] uppercase tracking-[0.18em] text-husk">
           {sessions.length} stored
@@ -1339,22 +1343,60 @@ function BalmShelf({
       ) : (
         <div>
           <div className="flex gap-3 overflow-x-auto pb-3">
-            {sessions.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => onSelect(s)}
-                className="group flex shrink-0 flex-col items-center gap-1.5"
-                title={`${s.dateISO} · ${s.durationMin} min · ${s.tasks.length} tasks`}
-              >
-                <MiniTube durationMin={s.durationMin} taskCount={s.tasks.length} />
-                <span className="text-[10px] uppercase tracking-[0.14em] text-husk group-hover:text-rind">
-                  {new Date(s.dateISO + "T00:00:00").toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </button>
-            ))}
+            {sessions.map((s) => {
+              const defaultLabel = new Date(s.dateISO + "T00:00:00").toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+              });
+              const display = s.label?.trim() || defaultLabel;
+              const isEditing = editingId === s.id;
+              return (
+                <div key={s.id} className="group flex shrink-0 flex-col items-center gap-1.5">
+                  <button
+                    onClick={() => onSelect(s)}
+                    title={`${s.dateISO} · ${s.durationMin} min · ${s.tasks.length} tasks`}
+                  >
+                    <MiniTube taskCount={s.tasks.length} />
+                  </button>
+                  {isEditing ? (
+                    <input
+                      autoFocus
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onBlur={() => {
+                        onRename(s.id, draft.trim());
+                        setEditingId(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          onRename(s.id, draft.trim());
+                          setEditingId(null);
+                        } else if (e.key === "Escape") {
+                          setEditingId(null);
+                        }
+                      }}
+                      maxLength={20}
+                      className="w-20 rounded border border-rind/40 bg-paper px-1 py-0.5 text-center text-[10px] uppercase tracking-[0.1em] text-ink focus:outline-none focus:ring-1 focus:ring-rind"
+                    />
+                  ) : (
+                    <button
+                      onDoubleClick={() => {
+                        setDraft(s.label ?? "");
+                        setEditingId(s.id);
+                      }}
+                      onClick={() => {
+                        setDraft(s.label ?? "");
+                        setEditingId(s.id);
+                      }}
+                      className="max-w-[5rem] truncate text-[10px] uppercase tracking-[0.14em] text-husk hover:text-rind"
+                      title="Click to rename"
+                    >
+                      {display}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
           <div className="h-1.5 rounded-full bg-rind/30" />
           <div className="h-3 rounded-b-xl bg-rind/15" />
@@ -1363,6 +1405,26 @@ function BalmShelf({
     </div>
   );
 }
+
+function MiniTube({ taskCount }: { taskCount: number }) {
+  const t = Math.min(1, taskCount / 5);
+  const lTop = (0.86 - 0.18 * t).toFixed(3);
+  const lBot = (0.7 - 0.24 * t).toFixed(3);
+  const hue = 60 - 12 * t;
+  return (
+    <div className="relative h-16 w-8 overflow-hidden rounded-b-lg rounded-t-sm bg-paper ring-1 ring-border transition group-hover:ring-rind">
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(180deg, oklch(${lTop} 0.15 ${hue}) 0%, oklch(${lBot} 0.17 ${hue - 5}) 100%)`,
+        }}
+      />
+      <div className="pointer-events-none absolute inset-x-1 top-1 h-6 w-1 rounded-full bg-white/40" />
+      <div className="absolute -top-1 inset-x-0.5 h-2 rounded-sm bg-rind/80" />
+    </div>
+  );
+}
+
 
 function MiniTube({ durationMin, taskCount }: { durationMin: number; taskCount: number }) {
   const fill = Math.min(100, (durationMin / 60) * 100);
