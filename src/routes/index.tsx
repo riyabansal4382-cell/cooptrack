@@ -23,6 +23,7 @@ type SavedSession = {
   startedAt: number;
   durationMin: number;
   tasks: string[];
+  label?: string;
 };
 
 const SESSIONS_KEY = "balm.sessions.v1";
