@@ -622,9 +622,21 @@ function Index() {
           />
         )}
 
-        {selectedSession && (
-          <SessionDetailModal session={selectedSession} onClose={() => setSelectedSession(null)} />
-        )}
+        {selectedSession && (() => {
+          const live = savedSessions.find((s) => s.id === selectedSession.id) ?? selectedSession;
+          return (
+            <SessionDetailModal
+              session={live}
+              onClose={() => setSelectedSession(null)}
+              onRename={(label) =>
+                setSavedSessions((arr) =>
+                  arr.map((s) => (s.id === live.id ? { ...s, label } : s)),
+                )
+              }
+            />
+          );
+        })()}
+
 
 
 
