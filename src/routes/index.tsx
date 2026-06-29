@@ -1447,11 +1447,12 @@ function BalmShelf({
   );
 }
 
-function MiniTube({ taskCount }: { taskCount: number }) {
-  const t = Math.min(1, taskCount / 5);
-  const lTop = (0.86 - 0.18 * t).toFixed(3);
-  const lBot = (0.7 - 0.24 * t).toFixed(3);
-  const hue = 60 - 12 * t;
+function MiniTube({ shade }: { shade: number }) {
+  // shade 0 = light orange, 1 = deep burnt orange
+  const t = Math.max(0, Math.min(1, shade));
+  const lTop = (0.88 - 0.28 * t).toFixed(3);
+  const lBot = (0.74 - 0.34 * t).toFixed(3);
+  const hue = 62 - 18 * t;
   return (
     <div className="relative h-16 w-8 overflow-hidden rounded-b-lg rounded-t-sm bg-paper ring-1 ring-border transition group-hover:ring-rind">
       <div
