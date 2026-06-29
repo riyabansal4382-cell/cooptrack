@@ -1383,7 +1383,8 @@ function BalmShelf({
       ) : (
         <div>
           <div className="flex gap-3 overflow-x-auto pb-3">
-            {sessions.map((s) => {
+            {[...sessions].reverse().map((s, i, arr) => {
+              const shade = arr.length > 1 ? i / (arr.length - 1) : 1;
               const defaultLabel = new Date(s.dateISO + "T00:00:00").toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
