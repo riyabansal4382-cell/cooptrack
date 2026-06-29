@@ -234,6 +234,8 @@ function Index() {
   ]);
   const [newTask, setNewTask] = useState("");
   const [balmFullscreen, setBalmFullscreen] = useState(false);
+  const [distractions, setDistractions] = useState(0);
+  const newTaskInputRef = useRef<HTMLInputElement>(null);
 
   const toggleTask = (id: string) =>
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
@@ -245,6 +247,37 @@ function Index() {
     setTasks((ts) => [...ts, { id: crypto.randomUUID(), label, done: false }]);
     setNewTask("");
   };
+
+  const toggleTimer = () =>
+    setRunning((r) => {
+      if (!r) sessionStartRef.current = Date.now();
+      return !r;
+    });
+
+  const logDistraction = () => {
+    setDistractions((d) => d + 1);
+    setRunning(false);
+  };
+
+  // Keyboard shortcuts: Space = start/pause timer, N = focus new-task input
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      const typing =
+        tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el?.isContentEditable;
+      if (typing) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        toggleTimer();
+      } else if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        newTaskInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const doneCount = tasks.filter((t) => t.done).length;
   const fillPct = tasks.length ? (doneCount / tasks.length) * 100 : 0;
