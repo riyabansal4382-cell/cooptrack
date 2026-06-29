@@ -1426,26 +1426,6 @@ function MiniTube({ taskCount }: { taskCount: number }) {
 }
 
 
-function MiniTube({ durationMin, taskCount }: { durationMin: number; taskCount: number }) {
-  const fill = Math.min(100, (durationMin / 60) * 100);
-  const t = Math.min(1, taskCount / 5);
-  const lTop = (0.86 - 0.18 * t).toFixed(3);
-  const lBot = (0.7 - 0.24 * t).toFixed(3);
-  const hue = 60 - 12 * t;
-  return (
-    <div className="relative h-16 w-8 overflow-hidden rounded-b-lg rounded-t-sm bg-paper ring-1 ring-border transition group-hover:ring-rind">
-      <div
-        className="absolute inset-x-0 bottom-0"
-        style={{
-          height: `${fill}%`,
-          background: `linear-gradient(180deg, oklch(${lTop} 0.15 ${hue}) 0%, oklch(${lBot} 0.17 ${hue - 5}) 100%)`,
-        }}
-      />
-      <div className="pointer-events-none absolute inset-x-1 top-1 h-6 w-1 rounded-full bg-white/40" />
-      <div className="absolute -top-1 inset-x-0.5 h-2 rounded-sm bg-rind/80" />
-    </div>
-  );
-}
 
 function SessionDetailModal({
   session,
