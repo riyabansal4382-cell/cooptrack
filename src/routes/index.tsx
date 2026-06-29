@@ -516,9 +516,10 @@ function Index() {
                     className="flex gap-2"
                   >
                     <input
+                      ref={newTaskInputRef}
                       value={newTask}
                       onChange={(e) => setNewTask(e.target.value)}
-                      placeholder="+ Add new task"
+                      placeholder="+ Add new task  (press N)"
                       className="flex-1 rounded-xl border border-dashed border-border bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-husk focus:border-rind focus:outline-none"
                     />
                     <button
