@@ -1430,10 +1430,14 @@ function MiniTube({ taskCount }: { taskCount: number }) {
 function SessionDetailModal({
   session,
   onClose,
+  onRename,
 }: {
   session: SavedSession;
   onClose: () => void;
+  onRename: (label: string) => void;
 }) {
+  const [labelDraft, setLabelDraft] = useState(session.label ?? "");
+  useEffect(() => { setLabelDraft(session.label ?? ""); }, [session.id, session.label]);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4 backdrop-blur-sm animate-fade-in"
@@ -1444,7 +1448,7 @@ function SessionDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-start justify-between gap-3">
-          <div>
+          <div className="flex-1">
             <p className="text-[10px] uppercase tracking-[0.18em] text-husk">Stored balm</p>
             <h3 className="font-serif text-xl leading-tight">
               {new Date(session.dateISO + "T00:00:00").toLocaleDateString(undefined, {
@@ -1453,6 +1457,23 @@ function SessionDetailModal({
                 day: "numeric",
               })}
             </h3>
+            <div className="mt-3">
+              <label className="text-[10px] uppercase tracking-[0.18em] text-husk">Balm name</label>
+              <input
+                value={labelDraft}
+                onChange={(e) => setLabelDraft(e.target.value)}
+                onBlur={() => onRename(labelDraft.trim())}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    onRename(labelDraft.trim());
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                placeholder="e.g. Calculus crunch"
+                maxLength={40}
+                className="mt-1 w-full rounded-lg border border-border bg-cream px-3 py-1.5 text-sm text-ink focus:border-rind focus:outline-none focus:ring-1 focus:ring-rind"
+              />
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -1462,6 +1483,7 @@ function SessionDetailModal({
             ✕
           </button>
         </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-cream p-3">
             <div className="text-[10px] uppercase tracking-[0.14em] text-husk">Duration</div>
