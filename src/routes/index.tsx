@@ -1397,7 +1397,7 @@ function BalmShelf({
                     onClick={() => onSelect(s)}
                     title={`${s.dateISO} · ${s.durationMin} min · ${s.tasks.length} tasks`}
                   >
-                    <MiniTube taskCount={s.tasks.length} />
+                    <MiniTube shade={shade} />
                   </button>
                   {isEditing ? (
                     <input
