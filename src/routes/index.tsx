@@ -386,7 +386,14 @@ function Index() {
             tasksTotal={tasks.length}
             nextEvent={(eventsByDate.get(todayISO) ?? [])[0]}
           />
-          <BalmShelf sessions={savedSessions} onSelect={setSelectedSession} />
+          <BalmShelf
+            sessions={savedSessions}
+            onSelect={setSelectedSession}
+            onRename={(id, label) =>
+              setSavedSessions((arr) => arr.map((s) => (s.id === id ? { ...s, label } : s)))
+            }
+          />
+
         </section>
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
           {/* Left: Lip balm progress + tasks */}
