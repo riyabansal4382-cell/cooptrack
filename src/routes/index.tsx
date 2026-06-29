@@ -359,14 +359,10 @@ function Index() {
 
             <div className="flex items-center gap-1">
               <button
-                onClick={() =>
-                  setRunning((r) => {
-                    if (!r) sessionStartRef.current = Date.now();
-                    return !r;
-                  })
-                }
+                onClick={toggleTimer}
                 className="grid size-9 place-items-center rounded-full bg-ink text-paper transition active:scale-95 hover:bg-rind"
-                aria-label={running ? "Pause timer" : "Start timer"}
+                aria-label={running ? "Pause timer (Space)" : "Start timer (Space)"}
+                title={running ? "Pause (Space)" : "Start (Space)"}
               >
                 {running ? (
                   <svg className="size-4" viewBox="0 0 16 16" fill="currentColor">
@@ -386,6 +382,16 @@ function Index() {
                 <svg className="size-4" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 3V1L4 4l4 3V5a3 3 0 110 6 3 3 0 01-3-3H3a5 5 0 105-5z" />
                 </svg>
+              </button>
+              <button
+                onClick={logDistraction}
+                className="ml-1 flex items-center gap-1 rounded-full bg-paper px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-husk ring-1 ring-border transition hover:border-rind hover:bg-rind/10 hover:text-rind"
+                aria-label="Log a distraction and pause the timer"
+                title="Distracted? Log it and pause"
+              >
+                <span aria-hidden>👀</span>
+                <span>Distracted</span>
+                <span className="tabular-nums text-ink">{distractions}</span>
               </button>
             </div>
           </div>
