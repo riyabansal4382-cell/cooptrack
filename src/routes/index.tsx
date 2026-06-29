@@ -234,6 +234,8 @@ function Index() {
   ]);
   const [newTask, setNewTask] = useState("");
   const [balmFullscreen, setBalmFullscreen] = useState(false);
+  const [distractions, setDistractions] = useState(0);
+  const newTaskInputRef = useRef<HTMLInputElement>(null);
 
   const toggleTask = (id: string) =>
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
@@ -245,6 +247,37 @@ function Index() {
     setTasks((ts) => [...ts, { id: crypto.randomUUID(), label, done: false }]);
     setNewTask("");
   };
+
+  const toggleTimer = () =>
+    setRunning((r) => {
+      if (!r) sessionStartRef.current = Date.now();
+      return !r;
+    });
+
+  const logDistraction = () => {
+    setDistractions((d) => d + 1);
+    setRunning(false);
+  };
+
+  // Keyboard shortcuts: Space = start/pause timer, N = focus new-task input
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      const typing =
+        tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el?.isContentEditable;
+      if (typing) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        toggleTimer();
+      } else if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        newTaskInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const doneCount = tasks.filter((t) => t.done).length;
   const fillPct = tasks.length ? (doneCount / tasks.length) * 100 : 0;
@@ -326,14 +359,10 @@ function Index() {
 
             <div className="flex items-center gap-1">
               <button
-                onClick={() =>
-                  setRunning((r) => {
-                    if (!r) sessionStartRef.current = Date.now();
-                    return !r;
-                  })
-                }
+                onClick={toggleTimer}
                 className="grid size-9 place-items-center rounded-full bg-ink text-paper transition active:scale-95 hover:bg-rind"
-                aria-label={running ? "Pause timer" : "Start timer"}
+                aria-label={running ? "Pause timer (Space)" : "Start timer (Space)"}
+                title={running ? "Pause (Space)" : "Start (Space)"}
               >
                 {running ? (
                   <svg className="size-4" viewBox="0 0 16 16" fill="currentColor">
@@ -353,6 +382,16 @@ function Index() {
                 <svg className="size-4" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 3V1L4 4l4 3V5a3 3 0 110 6 3 3 0 01-3-3H3a5 5 0 105-5z" />
                 </svg>
+              </button>
+              <button
+                onClick={logDistraction}
+                className="ml-1 flex items-center gap-1 rounded-full bg-paper px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-husk ring-1 ring-border transition hover:border-rind hover:bg-rind/10 hover:text-rind"
+                aria-label="Log a distraction and pause the timer"
+                title="Distracted? Log it and pause"
+              >
+                <span aria-hidden>👀</span>
+                <span>Distracted</span>
+                <span className="tabular-nums text-ink">{distractions}</span>
               </button>
             </div>
           </div>
@@ -477,9 +516,10 @@ function Index() {
                     className="flex gap-2"
                   >
                     <input
+                      ref={newTaskInputRef}
                       value={newTask}
                       onChange={(e) => setNewTask(e.target.value)}
-                      placeholder="+ Add new task"
+                      placeholder="+ Add new task  (press N)"
                       className="flex-1 rounded-xl border border-dashed border-border bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-husk focus:border-rind focus:outline-none"
                     />
                     <button
@@ -1343,7 +1383,8 @@ function BalmShelf({
       ) : (
         <div>
           <div className="flex gap-3 overflow-x-auto pb-3">
-            {sessions.map((s) => {
+            {[...sessions].reverse().map((s, i, arr) => {
+              const shade = arr.length > 1 ? i / (arr.length - 1) : 1;
               const defaultLabel = new Date(s.dateISO + "T00:00:00").toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
@@ -1356,7 +1397,7 @@ function BalmShelf({
                     onClick={() => onSelect(s)}
                     title={`${s.dateISO} · ${s.durationMin} min · ${s.tasks.length} tasks`}
                   >
-                    <MiniTube taskCount={s.tasks.length} />
+                    <MiniTube shade={shade} />
                   </button>
                   {isEditing ? (
                     <input
@@ -1406,11 +1447,12 @@ function BalmShelf({
   );
 }
 
-function MiniTube({ taskCount }: { taskCount: number }) {
-  const t = Math.min(1, taskCount / 5);
-  const lTop = (0.86 - 0.18 * t).toFixed(3);
-  const lBot = (0.7 - 0.24 * t).toFixed(3);
-  const hue = 60 - 12 * t;
+function MiniTube({ shade }: { shade: number }) {
+  // shade 0 = light orange, 1 = deep burnt orange
+  const t = Math.max(0, Math.min(1, shade));
+  const lTop = (0.88 - 0.28 * t).toFixed(3);
+  const lBot = (0.74 - 0.34 * t).toFixed(3);
+  const hue = 62 - 18 * t;
   return (
     <div className="relative h-16 w-8 overflow-hidden rounded-b-lg rounded-t-sm bg-paper ring-1 ring-border transition group-hover:ring-rind">
       <div
