@@ -564,31 +564,99 @@ function Index() {
               </div>
             </section>
 
-            <section>
-              <div className="mb-6 flex items-end justify-between gap-4">
-                <div>
-                  <h2 className="font-serif text-lg font-medium">Weekly Overview</h2>
-                  <p className="mt-1 text-xs text-husk">
-                    {weekDates[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} –{" "}
-                    {weekDates[6].toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setCalendarOpen(true)}
-                  className="rounded-full bg-ink px-4 py-2 text-xs font-medium uppercase tracking-[0.16em] text-paper transition hover:bg-rind"
-                >
-                  Open month
-                </button>
-              </div>
-              <WeeklyGrid
-                weekDates={weekDates}
-                eventsByDate={eventsByDate}
-                onRemove={removeEvent}
-                onAdd={addEvent}
-              />
-            </section>
           </div>
         </div>
+
+        {/* Full-width: Today's objectives + weekly chart */}
+        <section className="mt-12 space-y-5">
+          <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-husk">
+            Today's objectives
+          </h3>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+            <div className="space-y-4">
+              <ul className="space-y-2.5">
+                {tasks.map((t) => (
+                  <li
+                    key={t.id}
+                    className="group flex items-center gap-3 rounded-xl bg-paper p-4 ring-1 ring-border transition hover:bg-cream"
+                  >
+                    <button
+                      onClick={() => toggleTask(t.id)}
+                      className="grid size-6 shrink-0 place-items-center rounded border border-border bg-paper transition group-hover:border-rind"
+                      aria-label={t.done ? "Mark task incomplete" : "Mark task complete"}
+                    >
+                      {t.done && <div className="size-3.5 rounded-sm bg-rind" />}
+                    </button>
+                    <span
+                      className={`flex-1 text-base ${
+                        t.done ? "text-husk line-through decoration-balm" : "text-ink"
+                      }`}
+                    >
+                      {t.label}
+                    </span>
+                    <button
+                      onClick={() => removeTask(t.id)}
+                      className="text-xs text-husk opacity-0 transition hover:text-rind group-hover:opacity-100"
+                      aria-label="Remove task"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  addTask();
+                }}
+                className="flex gap-2"
+              >
+                <input
+                  ref={newTaskInputRef}
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                  placeholder="+ Add new task  (press N)"
+                  className="flex-1 rounded-xl border border-dashed border-border bg-transparent px-4 py-3 text-base text-ink placeholder:text-husk focus:border-rind focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-rind px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+                >
+                  Add
+                </button>
+              </form>
+            </div>
+            <div className="min-h-[320px]">
+              <WeeklyTaskChart completed={weekSeries} todayIdx={todayIdx} />
+            </div>
+          </div>
+        </section>
+
+        {/* Full-width: Weekly Overview at the bottom */}
+        <section className="mt-12">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl font-medium">Weekly Overview</h2>
+              <p className="mt-1 text-xs text-husk">
+                {weekDates[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} –{" "}
+                {weekDates[6].toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+              </p>
+            </div>
+            <button
+              onClick={() => setCalendarOpen(true)}
+              className="rounded-full bg-ink px-4 py-2 text-xs font-medium uppercase tracking-[0.16em] text-paper transition hover:bg-rind"
+            >
+              Open month
+            </button>
+          </div>
+          <WeeklyGrid
+            weekDates={weekDates}
+            eventsByDate={eventsByDate}
+            onRemove={removeEvent}
+            onAdd={addEvent}
+          />
+        </section>
+
 
         {calendarOpen && (
           <MonthCalendar
