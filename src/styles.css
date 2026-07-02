@@ -1,19 +1,25 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/dm-sans/400.css";
+@import "@fontsource/dm-sans/500.css";
+@import "@fontsource/dm-sans/600.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-serif: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -35,91 +41,61 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Brand palette — shades of orange */
-  --color-paper: var(--paper);
-  --color-ink: var(--ink);
-  --color-rind: var(--rind);          /* deep burnt orange */
-  --color-balm: var(--balm);          /* warm peach/clay */
-  --color-zest: var(--zest);          /* bright tangerine */
-  --color-cream: var(--cream);        /* soft tinted surface */
-  --color-husk: var(--husk);          /* muted warm gray */
+  /* Navy Trust palette */
+  --color-abyss: var(--abyss);        /* #0f1b3d */
+  --color-navy: var(--navy);          /* #1e3a5f */
+  --color-steel: var(--steel);        /* #3b6fa0 */
+  --color-frost: var(--frost);        /* #e8edf3 */
+  --color-signal: var(--signal);      /* warm gold accent for stars */
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
-  --paper: oklch(0.985 0.012 75);
-  --ink: oklch(0.22 0.04 50);
-  --cream: oklch(0.955 0.028 75);
-  --husk: oklch(0.62 0.035 55);
-  --balm: oklch(0.74 0.13 55);
-  --zest: oklch(0.78 0.17 55);
-  --rind: oklch(0.55 0.18 38);
+  --abyss: oklch(0.22 0.06 260);
+  --navy: oklch(0.32 0.08 255);
+  --steel: oklch(0.58 0.10 250);
+  --frost: oklch(0.955 0.012 250);
+  --signal: oklch(0.82 0.14 82);
 
-  --background: var(--paper);
-  --foreground: var(--ink);
-  --card: var(--paper);
-  --card-foreground: var(--ink);
-  --popover: var(--paper);
-  --popover-foreground: var(--ink);
-  --primary: var(--rind);
-  --primary-foreground: oklch(0.985 0.012 75);
-  --secondary: var(--cream);
-  --secondary-foreground: var(--ink);
-  --muted: var(--cream);
-  --muted-foreground: var(--husk);
-  --accent: var(--balm);
-  --accent-foreground: var(--ink);
-  --destructive: oklch(0.55 0.22 27);
-  --destructive-foreground: oklch(0.985 0.012 75);
-  --border: oklch(0.9 0.02 70);
-  --input: oklch(0.9 0.02 70);
-  --ring: var(--rind);
+  --background: var(--abyss);
+  --foreground: var(--frost);
+  --card: oklch(0.28 0.055 258);
+  --card-foreground: var(--frost);
+  --popover: oklch(0.26 0.055 258);
+  --popover-foreground: var(--frost);
+  --primary: var(--steel);
+  --primary-foreground: oklch(0.14 0.04 260);
+  --secondary: oklch(0.34 0.06 258);
+  --secondary-foreground: var(--frost);
+  --muted: oklch(0.30 0.05 258);
+  --muted-foreground: oklch(0.72 0.03 250);
+  --accent: var(--signal);
+  --accent-foreground: oklch(0.20 0.05 258);
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: var(--frost);
+  --border: oklch(0.38 0.05 258);
+  --input: oklch(0.32 0.05 258);
+  --ring: var(--steel);
 }
 
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
+  * { border-color: var(--color-border); }
   html, body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
+    font-feature-settings: "ss01";
   }
-  ::selection {
-    background-color: color-mix(in oklab, var(--color-rind) 18%, transparent);
-  }
+  h1, h2, h3, h4, .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
+  ::selection { background-color: color-mix(in oklab, var(--color-signal) 30%, transparent); }
 }
 
-@keyframes balm-rise {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-@keyframes shine {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.7; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
-@keyframes droplet {
-  0% { transform: translate(-50%, 0); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translate(-50%, 64px); opacity: 1; }
-}
-@keyframes ripple {
-  0% { transform: translateX(-50%) scale(0.3); opacity: 0.8; }
-  100% { transform: translateX(-50%) scale(1.8); opacity: 0; }
-}
-@keyframes beaker-tilt {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(3deg); }
-}
-@keyframes stream-pulse {
-  0%, 100% { transform: scaleY(1); opacity: 0.9; }
-  50% { transform: scaleY(1.08); opacity: 1; }
-}
-@keyframes steam {
-  0% { opacity: 0; transform: translateY(2px); }
-  50% { opacity: 0.6; }
-  100% { opacity: 0; transform: translateY(-8px); }
-}
-
