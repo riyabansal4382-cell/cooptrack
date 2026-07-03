@@ -508,17 +508,27 @@ function Editor({
             </div>
           </Field>
 
+          <Field label="Notes">
+            <textarea
+              value={draft.notes}
+              onChange={(e) => set("notes", e.target.value)}
+              placeholder="Interview prep, referrals, deadlines… (⌘/Ctrl+Enter to save)"
+              rows={3}
+              className="w-full resize-y rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:border-steel focus:outline-none"
+            />
+          </Field>
+
           <Field label="Stage">
             <div className="flex flex-wrap gap-1.5">
-              {STAGES.map((s) => (
+              {ALL_STAGES.map((s) => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => set("stage", s.id)}
                   className={`rounded-md border px-2.5 py-1 text-xs transition ${
                     draft.stage === s.id
-                      ? "border-steel bg-steel/25 text-foreground"
-                      : "border-border/70 text-muted-foreground hover:border-steel hover:text-foreground"
+                      ? "border-signal bg-signal/20 text-foreground"
+                      : "border-border/70 text-muted-foreground hover:border-signal hover:text-foreground"
                   }`}
                 >
                   {s.label}
@@ -526,6 +536,7 @@ function Editor({
               ))}
             </div>
           </Field>
+
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-2">
