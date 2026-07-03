@@ -564,12 +564,14 @@ function Editor({
               Cancel
             </button>
             <button
-              onClick={() => onSave(draft)}
-              disabled={!draft.company.trim()}
-              className="rounded-md bg-frost px-3 py-1.5 text-sm font-medium text-abyss transition hover:bg-frost/85 disabled:opacity-40"
+              onClick={trySave}
+              disabled={!canSave}
+              title="Enter"
+              className="rounded-md bg-signal px-3 py-1.5 text-sm font-medium text-abyss transition hover:bg-signal/85 disabled:opacity-40"
             >
-              Save
+              Save ⏎
             </button>
+
           </div>
         </div>
       </div>
