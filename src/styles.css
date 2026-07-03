@@ -41,43 +41,44 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Navy Trust palette */
-  --color-abyss: var(--abyss);        /* #0f1b3d */
-  --color-navy: var(--navy);          /* #1e3a5f */
-  --color-steel: var(--steel);        /* #3b6fa0 */
-  --color-frost: var(--frost);        /* #e8edf3 */
-  --color-signal: var(--signal);      /* warm gold accent for stars */
+  /* Terracotta & Sage palette */
+  --color-abyss: var(--abyss);        /* deep espresso */
+  --color-navy: var(--navy);          /* warm bark */
+  --color-steel: var(--steel);        /* sage green */
+  --color-frost: var(--frost);        /* cream */
+  --color-signal: var(--signal);      /* terracotta accent */
 }
 
 :root {
   --radius: 0.5rem;
 
-  --abyss: oklch(0.22 0.06 260);
-  --navy: oklch(0.32 0.08 255);
-  --steel: oklch(0.58 0.10 250);
-  --frost: oklch(0.955 0.012 250);
-  --signal: oklch(0.82 0.14 82);
+  --abyss: oklch(0.20 0.02 60);
+  --navy: oklch(0.30 0.035 55);
+  --steel: oklch(0.62 0.09 155);
+  --frost: oklch(0.96 0.02 80);
+  --signal: oklch(0.70 0.16 42);
 
   --background: var(--abyss);
   --foreground: var(--frost);
-  --card: oklch(0.28 0.055 258);
+  --card: oklch(0.26 0.03 58);
   --card-foreground: var(--frost);
-  --popover: oklch(0.26 0.055 258);
+  --popover: oklch(0.24 0.03 58);
   --popover-foreground: var(--frost);
-  --primary: var(--steel);
-  --primary-foreground: oklch(0.14 0.04 260);
-  --secondary: oklch(0.34 0.06 258);
+  --primary: var(--signal);
+  --primary-foreground: oklch(0.16 0.02 60);
+  --secondary: oklch(0.32 0.04 60);
   --secondary-foreground: var(--frost);
-  --muted: oklch(0.30 0.05 258);
-  --muted-foreground: oklch(0.72 0.03 250);
-  --accent: var(--signal);
-  --accent-foreground: oklch(0.20 0.05 258);
+  --muted: oklch(0.28 0.03 60);
+  --muted-foreground: oklch(0.74 0.025 70);
+  --accent: var(--steel);
+  --accent-foreground: oklch(0.18 0.03 60);
   --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: var(--frost);
-  --border: oklch(0.38 0.05 258);
-  --input: oklch(0.32 0.05 258);
-  --ring: var(--steel);
+  --border: oklch(0.36 0.035 60);
+  --input: oklch(0.30 0.03 60);
+  --ring: var(--signal);
 }
+
 
 @layer base {
   * { border-color: var(--color-border); }
