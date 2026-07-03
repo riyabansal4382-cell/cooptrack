@@ -37,7 +37,13 @@ const STAGES: { id: Stage; label: string; hint: string; accent: string }[] = [
   { id: "rejected", label: "Rejected", hint: "Archived", accent: "oklch(0.58 0.14 25)" },
 ];
 
+const ALL_STAGES: { id: Stage; label: string }[] = [
+  ...STAGES.map((s) => ({ id: s.id, label: s.label })),
+  { id: "accepted", label: "Accepted" },
+];
+
 const STORAGE_KEY = "cooptrack.applications.v2";
+
 
 
 const SEED: Application[] = [
