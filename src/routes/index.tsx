@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Stage = "applied" | "phone" | "interview" | "offer" | "rejected";
+type Stage = "applied" | "phone" | "interview" | "offer" | "rejected" | "accepted";
 
 type Application = {
   id: string;
@@ -23,29 +23,39 @@ type Application = {
   role: string;
   location: string;
   salary: string;
+  notes: string;
   rating: number; // 0-5
   stage: Stage;
   createdAt: number;
 };
 
 const STAGES: { id: Stage; label: string; hint: string; accent: string }[] = [
-  { id: "applied", label: "Applied", hint: "Submitted", accent: "oklch(0.62 0.08 250)" },
-  { id: "phone", label: "Phone Screen", hint: "Recruiter call", accent: "oklch(0.68 0.11 220)" },
-  { id: "interview", label: "Interview", hint: "Technical / onsite", accent: "oklch(0.72 0.13 190)" },
-  { id: "offer", label: "Offer", hint: "Decision time", accent: "oklch(0.78 0.15 140)" },
+  { id: "applied", label: "Applied", hint: "Submitted", accent: "oklch(0.70 0.10 60)" },
+  { id: "phone", label: "Phone Screen", hint: "Recruiter call", accent: "oklch(0.72 0.12 45)" },
+  { id: "interview", label: "Interview", hint: "Technical / onsite", accent: "oklch(0.72 0.15 30)" },
+  { id: "offer", label: "Offer", hint: "Decision time", accent: "oklch(0.72 0.14 150)" },
   { id: "rejected", label: "Rejected", hint: "Archived", accent: "oklch(0.58 0.14 25)" },
 ];
 
-const STORAGE_KEY = "cooptrack.applications.v1";
+const ALL_STAGES: { id: Stage; label: string }[] = [
+  ...STAGES.map((s) => ({ id: s.id, label: s.label })),
+  { id: "accepted", label: "Accepted" },
+];
+
+const STORAGE_KEY = "cooptrack.applications.v2";
+
+
 
 const SEED: Application[] = [
-  { id: "s1", company: "Northwind Robotics", role: "Firmware Co-op", location: "Boston, MA", salary: "$32/hr", rating: 5, stage: "interview", createdAt: Date.now() - 86400000 * 6 },
-  { id: "s2", company: "Meridian Capital", role: "Quant Intern", location: "New York, NY", salary: "$45/hr", rating: 4, stage: "phone", createdAt: Date.now() - 86400000 * 4 },
-  { id: "s3", company: "Aster Health", role: "Data Science Co-op", location: "Remote", salary: "$28/hr", rating: 3, stage: "applied", createdAt: Date.now() - 86400000 * 2 },
-  { id: "s4", company: "Kite & Co.", role: "Product Design Intern", location: "Toronto, ON", salary: "$26/hr", rating: 4, stage: "offer", createdAt: Date.now() - 86400000 * 10 },
-  { id: "s5", company: "Vortex Systems", role: "Backend Engineer Co-op", location: "Austin, TX", salary: "$34/hr", rating: 2, stage: "rejected", createdAt: Date.now() - 86400000 * 14 },
-  { id: "s6", company: "Halcyon Studios", role: "Graphics Co-op", location: "Montreal, QC", salary: "$30/hr", rating: 5, stage: "applied", createdAt: Date.now() - 86400000 * 1 },
+  { id: "s1", company: "Northwind Robotics", role: "Firmware Co-op", location: "Boston, MA", salary: "$32/hr", notes: "Referred by Priya. Second-round scheduled.", rating: 5, stage: "interview", createdAt: Date.now() - 86400000 * 6 },
+  { id: "s2", company: "Meridian Capital", role: "Quant Intern", location: "New York, NY", salary: "$45/hr", notes: "HR call went well — waiting on technical.", rating: 4, stage: "phone", createdAt: Date.now() - 86400000 * 4 },
+  { id: "s3", company: "Aster Health", role: "Data Science Co-op", location: "Remote", salary: "$28/hr", notes: "", rating: 3, stage: "applied", createdAt: Date.now() - 86400000 * 2 },
+  { id: "s4", company: "Kite & Co.", role: "Product Design Intern", location: "Toronto, ON", salary: "$26/hr", notes: "Offer expires Fri.", rating: 4, stage: "offer", createdAt: Date.now() - 86400000 * 10 },
+  { id: "s5", company: "Vortex Systems", role: "Backend Engineer Co-op", location: "Austin, TX", salary: "$34/hr", notes: "Rejected after onsite.", rating: 2, stage: "rejected", createdAt: Date.now() - 86400000 * 14 },
+  { id: "s6", company: "Halcyon Studios", role: "Graphics Co-op", location: "Montreal, QC", salary: "$30/hr", notes: "", rating: 5, stage: "applied", createdAt: Date.now() - 86400000 * 1 },
+  { id: "s7", company: "Lumen Labs", role: "ML Research Co-op", location: "Seattle, WA", salary: "$40/hr", notes: "Signed! Starts May 20.", rating: 5, stage: "accepted", createdAt: Date.now() - 86400000 * 20 },
 ];
+
 
 function loadApps(): Application[] {
   if (typeof window === "undefined") return SEED;
@@ -77,6 +87,23 @@ function Index() {
     if (!hydrated) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
   }, [apps, hydrated]);
+
+  // Space = new application (when not typing & no modal open)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (editing || creating) return;
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || t?.isContentEditable) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        setCreating("applied");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editing, creating]);
+
 
   const grouped = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -127,6 +154,7 @@ function Index() {
             <Stat label="Total" value={stats.total} />
             <Stat label="Active" value={stats.active} tone="accent" />
             <Stat label="Offers" value={stats.byStage.offer || 0} tone="good" />
+            <Stat label="Accepted" value={stats.byStage.accepted || 0} tone="good" />
             <div className="relative">
               <input
                 value={query}
@@ -137,7 +165,8 @@ function Index() {
             </div>
             <button
               onClick={() => setCreating("applied")}
-              className="h-9 rounded-md bg-frost px-3 text-sm font-medium text-abyss transition hover:bg-frost/85"
+              className="h-9 rounded-md bg-signal px-3 text-sm font-medium text-abyss transition hover:bg-signal/85"
+              title="Shortcut: Space"
             >
               + New application
             </button>
@@ -146,12 +175,19 @@ function Index() {
       </header>
 
       <main className="mx-auto max-w-[1600px] px-6 py-6">
+        <AcceptedStrip
+          apps={apps.filter((a) => a.stage === "accepted")}
+          onOpen={(a) => setEditing(a)}
+          onDropAccept={(id) => moveTo(id, "accepted")}
+          dragId={dragId}
+        />
+
         <div className="mb-4 flex items-baseline justify-between">
           <h1 className="font-display text-2xl font-semibold tracking-tight">
             Your pipeline
           </h1>
           <p className="text-xs text-muted-foreground">
-            Drag cards between columns · sorted by ★ rating
+            Drag cards between columns · Space = new · Enter = save
           </p>
         </div>
 
@@ -163,6 +199,7 @@ function Index() {
               <section
                 key={s.id}
                 onDragOver={(e) => {
+
                   e.preventDefault();
                   setOverStage(s.id);
                 }}
@@ -234,11 +271,13 @@ function Index() {
               role: "",
               location: "",
               salary: "",
+              notes: "",
               rating: 3,
               stage: creating!,
               createdAt: Date.now(),
             }
           }
+
           isNew={!editing}
           onClose={() => {
             setEditing(null);
@@ -309,19 +348,33 @@ function Card({
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
         {app.location && (
-          <span className="inline-flex items-center gap-1">
-            <span className="h-1 w-1 rounded-full bg-steel" /> {app.location}
-          </span>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(app.location)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 rounded px-1 -mx-1 hover:text-signal hover:underline"
+            title="Open in Google Maps"
+          >
+            <span className="h-1 w-1 rounded-full bg-steel" /> {app.location} ↗
+          </a>
         )}
+
         {app.salary && (
           <span className="rounded bg-navy/70 px-1.5 py-0.5 font-medium text-frost/90">
             {app.salary}
           </span>
         )}
       </div>
+      {app.notes && (
+        <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-muted-foreground/90">
+          {app.notes}
+        </p>
+      )}
     </article>
   );
 }
+
 
 function Stars({
   value,
@@ -370,13 +423,26 @@ function Editor({
 }) {
   const [draft, setDraft] = useState<Application>(initial);
 
+  const canSave = draft.company.trim().length > 0;
+  const trySave = () => {
+    if (canSave) onSave(draft);
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key === "Enter") {
+        const t = e.target as HTMLElement | null;
+        // Allow multiline in textarea; save on plain Enter elsewhere
+        if (t?.tagName === "TEXTAREA" && !(e.metaKey || e.ctrlKey)) return;
+        e.preventDefault();
+        trySave();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, onClose]);
 
   const set = <K extends keyof Application>(k: K, v: Application[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -390,6 +456,7 @@ function Editor({
         className="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold tracking-tight">
             {isNew ? "New application" : "Edit application"}
@@ -447,17 +514,27 @@ function Editor({
             </div>
           </Field>
 
+          <Field label="Notes">
+            <textarea
+              value={draft.notes}
+              onChange={(e) => set("notes", e.target.value)}
+              placeholder="Interview prep, referrals, deadlines… (⌘/Ctrl+Enter to save)"
+              rows={3}
+              className="w-full resize-y rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:border-steel focus:outline-none"
+            />
+          </Field>
+
           <Field label="Stage">
             <div className="flex flex-wrap gap-1.5">
-              {STAGES.map((s) => (
+              {ALL_STAGES.map((s) => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => set("stage", s.id)}
                   className={`rounded-md border px-2.5 py-1 text-xs transition ${
                     draft.stage === s.id
-                      ? "border-steel bg-steel/25 text-foreground"
-                      : "border-border/70 text-muted-foreground hover:border-steel hover:text-foreground"
+                      ? "border-signal bg-signal/20 text-foreground"
+                      : "border-border/70 text-muted-foreground hover:border-signal hover:text-foreground"
                   }`}
                 >
                   {s.label}
@@ -465,6 +542,7 @@ function Editor({
               ))}
             </div>
           </Field>
+
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-2">
@@ -486,12 +564,14 @@ function Editor({
               Cancel
             </button>
             <button
-              onClick={() => onSave(draft)}
-              disabled={!draft.company.trim()}
-              className="rounded-md bg-frost px-3 py-1.5 text-sm font-medium text-abyss transition hover:bg-frost/85 disabled:opacity-40"
+              onClick={trySave}
+              disabled={!canSave}
+              title="Enter"
+              className="rounded-md bg-signal px-3 py-1.5 text-sm font-medium text-abyss transition hover:bg-signal/85 disabled:opacity-40"
             >
-              Save
+              Save ⏎
             </button>
+
           </div>
         </div>
       </div>
@@ -512,7 +592,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Logo() {
   return (
-    <div className="grid h-9 w-9 place-items-center rounded-md bg-frost text-abyss">
+    <div className="grid h-9 w-9 place-items-center rounded-md bg-signal text-abyss">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
         <rect x="3" y="4" width="4" height="16" rx="1" fill="currentColor" />
         <rect x="10" y="4" width="4" height="10" rx="1" fill="currentColor" opacity="0.7" />
@@ -521,3 +601,76 @@ function Logo() {
     </div>
   );
 }
+
+function AcceptedStrip({
+  apps,
+  onOpen,
+  onDropAccept,
+  dragId,
+}: {
+  apps: Application[];
+  onOpen: (a: Application) => void;
+  onDropAccept: (id: string) => void;
+  dragId: string | null;
+}) {
+  const [over, setOver] = useState(false);
+  return (
+    <section
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={() => {
+        if (dragId) onDropAccept(dragId);
+        setOver(false);
+      }}
+      className={`mb-5 rounded-xl border p-3 transition-colors ${
+        over
+          ? "border-signal bg-signal/10"
+          : "border-signal/40 bg-gradient-to-r from-signal/10 via-transparent to-transparent"
+      }`}
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-signal/90 text-abyss">
+            ✓
+          </span>
+          <div>
+            <div className="font-display text-sm font-semibold tracking-tight">Accepted</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Signed offers · drop here
+            </div>
+          </div>
+          <span className="ml-1 rounded-full bg-signal/25 px-2 py-0.5 text-xs font-medium text-signal">
+            {apps.length}
+          </span>
+        </div>
+
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {apps.length === 0 ? (
+            <span className="text-xs text-muted-foreground italic">
+              Drag an offer here once you accept it.
+            </span>
+          ) : (
+            apps.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => onOpen(a)}
+                className="group flex items-center gap-2 rounded-full border border-signal/40 bg-abyss/50 px-3 py-1 text-xs transition hover:border-signal hover:bg-signal/15"
+              >
+                <span className="font-display font-semibold text-foreground">{a.company}</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground">{a.role}</span>
+                {a.location && (
+                  <span className="text-muted-foreground/70">· {a.location}</span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
