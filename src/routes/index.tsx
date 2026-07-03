@@ -417,13 +417,26 @@ function Editor({
 }) {
   const [draft, setDraft] = useState<Application>(initial);
 
+  const canSave = draft.company.trim().length > 0;
+  const trySave = () => {
+    if (canSave) onSave(draft);
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key === "Enter") {
+        const t = e.target as HTMLElement | null;
+        // Allow multiline in textarea; save on plain Enter elsewhere
+        if (t?.tagName === "TEXTAREA" && !(e.metaKey || e.ctrlKey)) return;
+        e.preventDefault();
+        trySave();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, onClose]);
 
   const set = <K extends keyof Application>(k: K, v: Application[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -437,6 +450,7 @@ function Editor({
         className="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold tracking-tight">
             {isNew ? "New application" : "Edit application"}
