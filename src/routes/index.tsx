@@ -592,7 +592,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Logo() {
   return (
-    <div className="grid h-9 w-9 place-items-center rounded-md bg-frost text-abyss">
+    <div className="grid h-9 w-9 place-items-center rounded-md bg-signal text-abyss">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
         <rect x="3" y="4" width="4" height="16" rx="1" fill="currentColor" />
         <rect x="10" y="4" width="4" height="10" rx="1" fill="currentColor" opacity="0.7" />
@@ -601,3 +601,76 @@ function Logo() {
     </div>
   );
 }
+
+function AcceptedStrip({
+  apps,
+  onOpen,
+  onDropAccept,
+  dragId,
+}: {
+  apps: Application[];
+  onOpen: (a: Application) => void;
+  onDropAccept: (id: string) => void;
+  dragId: string | null;
+}) {
+  const [over, setOver] = useState(false);
+  return (
+    <section
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={() => {
+        if (dragId) onDropAccept(dragId);
+        setOver(false);
+      }}
+      className={`mb-5 rounded-xl border p-3 transition-colors ${
+        over
+          ? "border-signal bg-signal/10"
+          : "border-signal/40 bg-gradient-to-r from-signal/10 via-transparent to-transparent"
+      }`}
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-signal/90 text-abyss">
+            ✓
+          </span>
+          <div>
+            <div className="font-display text-sm font-semibold tracking-tight">Accepted</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Signed offers · drop here
+            </div>
+          </div>
+          <span className="ml-1 rounded-full bg-signal/25 px-2 py-0.5 text-xs font-medium text-signal">
+            {apps.length}
+          </span>
+        </div>
+
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {apps.length === 0 ? (
+            <span className="text-xs text-muted-foreground italic">
+              Drag an offer here once you accept it.
+            </span>
+          ) : (
+            apps.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => onOpen(a)}
+                className="group flex items-center gap-2 rounded-full border border-signal/40 bg-abyss/50 px-3 py-1 text-xs transition hover:border-signal hover:bg-signal/15"
+              >
+                <span className="font-display font-semibold text-foreground">{a.company}</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground">{a.role}</span>
+                {a.location && (
+                  <span className="text-muted-foreground/70">· {a.location}</span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
