@@ -342,10 +342,18 @@ function Card({
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
         {app.location && (
-          <span className="inline-flex items-center gap-1">
-            <span className="h-1 w-1 rounded-full bg-steel" /> {app.location}
-          </span>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(app.location)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 rounded px-1 -mx-1 hover:text-signal hover:underline"
+            title="Open in Google Maps"
+          >
+            <span className="h-1 w-1 rounded-full bg-steel" /> {app.location} ↗
+          </a>
         )}
+
         {app.salary && (
           <span className="rounded bg-navy/70 px-1.5 py-0.5 font-medium text-frost/90">
             {app.salary}
