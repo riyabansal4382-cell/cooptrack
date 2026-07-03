@@ -41,13 +41,15 @@ const STORAGE_KEY = "cooptrack.applications.v2";
 
 
 const SEED: Application[] = [
-  { id: "s1", company: "Northwind Robotics", role: "Firmware Co-op", location: "Boston, MA", salary: "$32/hr", rating: 5, stage: "interview", createdAt: Date.now() - 86400000 * 6 },
-  { id: "s2", company: "Meridian Capital", role: "Quant Intern", location: "New York, NY", salary: "$45/hr", rating: 4, stage: "phone", createdAt: Date.now() - 86400000 * 4 },
-  { id: "s3", company: "Aster Health", role: "Data Science Co-op", location: "Remote", salary: "$28/hr", rating: 3, stage: "applied", createdAt: Date.now() - 86400000 * 2 },
-  { id: "s4", company: "Kite & Co.", role: "Product Design Intern", location: "Toronto, ON", salary: "$26/hr", rating: 4, stage: "offer", createdAt: Date.now() - 86400000 * 10 },
-  { id: "s5", company: "Vortex Systems", role: "Backend Engineer Co-op", location: "Austin, TX", salary: "$34/hr", rating: 2, stage: "rejected", createdAt: Date.now() - 86400000 * 14 },
-  { id: "s6", company: "Halcyon Studios", role: "Graphics Co-op", location: "Montreal, QC", salary: "$30/hr", rating: 5, stage: "applied", createdAt: Date.now() - 86400000 * 1 },
+  { id: "s1", company: "Northwind Robotics", role: "Firmware Co-op", location: "Boston, MA", salary: "$32/hr", notes: "Referred by Priya. Second-round scheduled.", rating: 5, stage: "interview", createdAt: Date.now() - 86400000 * 6 },
+  { id: "s2", company: "Meridian Capital", role: "Quant Intern", location: "New York, NY", salary: "$45/hr", notes: "HR call went well — waiting on technical.", rating: 4, stage: "phone", createdAt: Date.now() - 86400000 * 4 },
+  { id: "s3", company: "Aster Health", role: "Data Science Co-op", location: "Remote", salary: "$28/hr", notes: "", rating: 3, stage: "applied", createdAt: Date.now() - 86400000 * 2 },
+  { id: "s4", company: "Kite & Co.", role: "Product Design Intern", location: "Toronto, ON", salary: "$26/hr", notes: "Offer expires Fri.", rating: 4, stage: "offer", createdAt: Date.now() - 86400000 * 10 },
+  { id: "s5", company: "Vortex Systems", role: "Backend Engineer Co-op", location: "Austin, TX", salary: "$34/hr", notes: "Rejected after onsite.", rating: 2, stage: "rejected", createdAt: Date.now() - 86400000 * 14 },
+  { id: "s6", company: "Halcyon Studios", role: "Graphics Co-op", location: "Montreal, QC", salary: "$30/hr", notes: "", rating: 5, stage: "applied", createdAt: Date.now() - 86400000 * 1 },
+  { id: "s7", company: "Lumen Labs", role: "ML Research Co-op", location: "Seattle, WA", salary: "$40/hr", notes: "Signed! Starts May 20.", rating: 5, stage: "accepted", createdAt: Date.now() - 86400000 * 20 },
 ];
+
 
 function loadApps(): Application[] {
   if (typeof window === "undefined") return SEED;
