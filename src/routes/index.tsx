@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Stage = "applied" | "phone" | "interview" | "offer" | "rejected";
+type Stage = "applied" | "phone" | "interview" | "offer" | "rejected" | "accepted";
 
 type Application = {
   id: string;
@@ -23,20 +23,22 @@ type Application = {
   role: string;
   location: string;
   salary: string;
+  notes: string;
   rating: number; // 0-5
   stage: Stage;
   createdAt: number;
 };
 
 const STAGES: { id: Stage; label: string; hint: string; accent: string }[] = [
-  { id: "applied", label: "Applied", hint: "Submitted", accent: "oklch(0.62 0.08 250)" },
-  { id: "phone", label: "Phone Screen", hint: "Recruiter call", accent: "oklch(0.68 0.11 220)" },
-  { id: "interview", label: "Interview", hint: "Technical / onsite", accent: "oklch(0.72 0.13 190)" },
-  { id: "offer", label: "Offer", hint: "Decision time", accent: "oklch(0.78 0.15 140)" },
+  { id: "applied", label: "Applied", hint: "Submitted", accent: "oklch(0.70 0.10 60)" },
+  { id: "phone", label: "Phone Screen", hint: "Recruiter call", accent: "oklch(0.72 0.12 45)" },
+  { id: "interview", label: "Interview", hint: "Technical / onsite", accent: "oklch(0.72 0.15 30)" },
+  { id: "offer", label: "Offer", hint: "Decision time", accent: "oklch(0.72 0.14 150)" },
   { id: "rejected", label: "Rejected", hint: "Archived", accent: "oklch(0.58 0.14 25)" },
 ];
 
-const STORAGE_KEY = "cooptrack.applications.v1";
+const STORAGE_KEY = "cooptrack.applications.v2";
+
 
 const SEED: Application[] = [
   { id: "s1", company: "Northwind Robotics", role: "Firmware Co-op", location: "Boston, MA", salary: "$32/hr", rating: 5, stage: "interview", createdAt: Date.now() - 86400000 * 6 },
