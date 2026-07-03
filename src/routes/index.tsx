@@ -360,9 +360,15 @@ function Card({
           </span>
         )}
       </div>
+      {app.notes && (
+        <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-muted-foreground/90">
+          {app.notes}
+        </p>
+      )}
     </article>
   );
 }
+
 
 function Stars({
   value,
