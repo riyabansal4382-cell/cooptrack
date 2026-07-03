@@ -265,11 +265,13 @@ function Index() {
               role: "",
               location: "",
               salary: "",
+              notes: "",
               rating: 3,
               stage: creating!,
               createdAt: Date.now(),
             }
           }
+
           isNew={!editing}
           onClose={() => {
             setEditing(null);
