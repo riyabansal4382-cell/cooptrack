@@ -148,6 +148,7 @@ function Index() {
             <Stat label="Total" value={stats.total} />
             <Stat label="Active" value={stats.active} tone="accent" />
             <Stat label="Offers" value={stats.byStage.offer || 0} tone="good" />
+            <Stat label="Accepted" value={stats.byStage.accepted || 0} tone="good" />
             <div className="relative">
               <input
                 value={query}
@@ -158,7 +159,8 @@ function Index() {
             </div>
             <button
               onClick={() => setCreating("applied")}
-              className="h-9 rounded-md bg-frost px-3 text-sm font-medium text-abyss transition hover:bg-frost/85"
+              className="h-9 rounded-md bg-signal px-3 text-sm font-medium text-abyss transition hover:bg-signal/85"
+              title="Shortcut: Space"
             >
               + New application
             </button>
@@ -167,12 +169,19 @@ function Index() {
       </header>
 
       <main className="mx-auto max-w-[1600px] px-6 py-6">
+        <AcceptedStrip
+          apps={apps.filter((a) => a.stage === "accepted")}
+          onOpen={(a) => setEditing(a)}
+          onDropAccept={(id) => moveTo(id, "accepted")}
+          dragId={dragId}
+        />
+
         <div className="mb-4 flex items-baseline justify-between">
           <h1 className="font-display text-2xl font-semibold tracking-tight">
             Your pipeline
           </h1>
           <p className="text-xs text-muted-foreground">
-            Drag cards between columns · sorted by ★ rating
+            Drag cards between columns · Space = new · Enter = save
           </p>
         </div>
 
@@ -184,6 +193,7 @@ function Index() {
               <section
                 key={s.id}
                 onDragOver={(e) => {
+
                   e.preventDefault();
                   setOverStage(s.id);
                 }}
