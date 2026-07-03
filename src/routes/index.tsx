@@ -82,6 +82,23 @@ function Index() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
   }, [apps, hydrated]);
 
+  // Space = new application (when not typing & no modal open)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (editing || creating) return;
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || t?.isContentEditable) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        setCreating("applied");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editing, creating]);
+
+
   const grouped = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filter = (a: Application) =>
