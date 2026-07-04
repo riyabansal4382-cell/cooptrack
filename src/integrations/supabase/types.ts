@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          company: string
+          created_at: string
+          id: string
+          location: string
+          notes: string
+          rating: number
+          remote_type: Database["public"]["Enums"]["remote_type"]
+          role: string
+          salary: string
+          salary_amount: number | null
+          stage: Database["public"]["Enums"]["application_stage"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          id?: string
+          location?: string
+          notes?: string
+          rating?: number
+          remote_type?: Database["public"]["Enums"]["remote_type"]
+          role: string
+          salary?: string
+          salary_amount?: number | null
+          stage?: Database["public"]["Enums"]["application_stage"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          id?: string
+          location?: string
+          notes?: string
+          rating?: number
+          remote_type?: Database["public"]["Enums"]["remote_type"]
+          role?: string
+          salary?: string
+          salary_amount?: number | null
+          stage?: Database["public"]["Enums"]["application_stage"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +70,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      application_stage:
+        | "applied"
+        | "phone_screen"
+        | "interview"
+        | "offer"
+        | "rejected"
+        | "accepted"
+      remote_type: "remote" | "onsite" | "hybrid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +204,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      application_stage: [
+        "applied",
+        "phone_screen",
+        "interview",
+        "offer",
+        "rejected",
+        "accepted",
+      ],
+      remote_type: ["remote", "onsite", "hybrid"],
+    },
   },
 } as const
