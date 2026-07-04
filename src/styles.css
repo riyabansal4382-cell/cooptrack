@@ -52,31 +52,34 @@
 :root {
   --radius: 0.75rem;
 
-  /* Modern: near-black canvas, electric violet primary, cyan accent */
-  --abyss: oklch(0.16 0.015 275);       /* deep ink */
-  --navy: oklch(0.22 0.025 275);        /* raised surface */
-  --steel: oklch(0.78 0.14 200);        /* cyan accent */
-  --frost: oklch(0.97 0.005 260);       /* near white */
-  --signal: oklch(0.68 0.22 295);       /* electric violet */
+  /* 60/30/10 blues:
+     60% dominant  → deep navy background
+     30% secondary → mid slate-blue surfaces, headers, sections
+     10% accent    → bright azure for CTAs & highlights */
+  --abyss: oklch(0.19 0.04 255);        /* 60% dominant */
+  --navy: oklch(0.32 0.06 255);         /* 30% secondary */
+  --steel: oklch(0.55 0.10 245);        /* muted supporting blue */
+  --frost: oklch(0.97 0.01 240);        /* text on dark */
+  --signal: oklch(0.70 0.19 240);       /* 10% accent — azure */
 
   --background: var(--abyss);
   --foreground: var(--frost);
-  --card: oklch(0.21 0.022 275);
+  --card: oklch(0.27 0.05 255);
   --card-foreground: var(--frost);
-  --popover: oklch(0.19 0.022 275);
+  --popover: oklch(0.24 0.05 255);
   --popover-foreground: var(--frost);
   --primary: var(--signal);
-  --primary-foreground: oklch(0.14 0.02 275);
-  --secondary: oklch(0.26 0.028 275);
+  --primary-foreground: oklch(0.15 0.04 255);
+  --secondary: var(--navy);
   --secondary-foreground: var(--frost);
-  --muted: oklch(0.23 0.022 275);
-  --muted-foreground: oklch(0.72 0.02 265);
-  --accent: var(--steel);
-  --accent-foreground: oklch(0.14 0.02 275);
-  --destructive: oklch(0.62 0.22 20);
+  --muted: oklch(0.26 0.045 255);
+  --muted-foreground: oklch(0.74 0.03 240);
+  --accent: var(--signal);
+  --accent-foreground: oklch(0.15 0.04 255);
+  --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: var(--frost);
-  --border: oklch(0.30 0.03 275);
-  --input: oklch(0.26 0.025 275);
+  --border: oklch(0.36 0.05 255);
+  --input: oklch(0.28 0.045 255);
   --ring: var(--signal);
 }
 
