@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -212,6 +212,13 @@ function Index() {
             >
               📊 Compare
             </button>
+            <Link
+              to="/interviews"
+              className="h-9 rounded-md border border-border bg-card/50 px-3 text-sm leading-9 hover:border-steel"
+              title="Interview calendar"
+            >
+              📅 Calendar
+            </Link>
             <ExportImport apps={apps} onImported={refetch} />
             <button
               onClick={() => setCreating("applied")}
