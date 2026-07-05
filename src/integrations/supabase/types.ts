@@ -62,6 +62,56 @@ export type Database = {
         }
         Relationships: []
       }
+      interviews: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          location: string
+          meeting_url: string
+          notes: string
+          scheduled_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location?: string
+          meeting_url?: string
+          notes?: string
+          scheduled_at: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location?: string
+          meeting_url?: string
+          notes?: string
+          scheduled_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
