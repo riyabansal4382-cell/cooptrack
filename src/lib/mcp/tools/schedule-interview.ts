@@ -31,7 +31,7 @@ export default defineTool({
     const { data, error } = await supabaseForUser(ctx)
       .from("interviews")
       .insert({
-        user_id: ctx.getUserId(),
+        user_id: ctx.getUserId()!,
         title: input.title,
         scheduled_at: input.scheduled_at,
         duration_minutes: input.duration_minutes,

@@ -35,7 +35,7 @@ export default defineTool({
     const { data, error } = await supabaseForUser(ctx)
       .from("applications")
       .insert({
-        user_id: ctx.getUserId(),
+        user_id: ctx.getUserId()!,
         company: input.company,
         role: input.role,
         location: input.location,
