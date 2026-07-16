@@ -4,8 +4,17 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 
+// Same-origin relative path only — prevents open-redirect via ?next=https://evil.com
+function safeNext(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — CoopTrack" },
@@ -17,6 +26,12 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const nextPath = safeNext(next);
+  const returnTo = nextPath
+    ? `${window.location.origin}${nextPath}`
+    : window.location.origin;
+
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,9 +39,17 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/", replace: true });
+      if (data.session) {
+        if (nextPath) window.location.href = returnTo;
+        else navigate({ to: "/", replace: true });
+      }
     });
-  }, [navigate]);
+  }, [navigate, nextPath, returnTo]);
+
+  const goNext = () => {
+    if (nextPath) window.location.href = returnTo;
+    else navigate({ to: "/", replace: true });
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +59,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: returnTo },
         });
         if (error) throw error;
         toast.success("Account created. Signing you in…");
@@ -44,7 +67,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      navigate({ to: "/", replace: true });
+      goNext();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -55,14 +78,14 @@ function AuthPage() {
   const google = async () => {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: returnTo,
     });
     if (result.error) {
       toast.error(result.error.message);
       setBusy(false);
       return;
     }
-    if (!result.redirected) navigate({ to: "/", replace: true });
+    if (!result.redirected) goNext();
   };
 
   return (

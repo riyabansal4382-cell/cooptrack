@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://mtsyqrhwoiwfolastyhm.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "cooptrack-mcp",
+      "version": "0.1.0",
+      "title": "CoopTrack"
+    },
+    "tools": [
+      {
+        "name": "list_applications",
+        "title": "List applications",
+        "description": "List the signed-in user's co-op / internship applications, optionally filtered by stage.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "stage": {
+              "type": "string",
+              "enum": [
+                "applied",
+                "phone_screen",
+                "interview",
+                "offer",
+                "rejected",
+                "accepted"
+              ],
+              "description": "Optional stage filter."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_application",
+        "title": "Create application",
+        "description": "Add a new co-op / internship application to the signed-in user's tracker.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "company": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Company name."
+            },
+            "role": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Role or position title."
+            },
+            "location": {
+              "type": "string",
+              "description": "Location, e.g. 'San Francisco, CA'."
+            },
+            "remote_type": {
+              "type": "string",
+              "enum": [
+                "remote",
+                "onsite",
+                "hybrid"
+              ]
+            },
+            "salary": {
+              "type": "string",
+              "description": "Salary description, free-form."
+            },
+            "rating": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5,
+              "description": "Personal interest rating 0-5."
+            },
+            "stage": {
+              "type": "string",
+              "enum": [
+                "applied",
+                "phone_screen",
+                "interview",
+                "offer",
+                "rejected",
+                "accepted"
+              ],
+              "description": "Pipeline stage. Defaults to 'applied'."
+            },
+            "notes": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "company",
+            "role"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_application_stage",
+        "title": "Update application stage",
+        "description": "Move an existing application to a new pipeline stage.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Application id."
+            },
+            "stage": {
+              "type": "string",
+              "enum": [
+                "applied",
+                "phone_screen",
+                "interview",
+                "offer",
+                "rejected",
+                "accepted"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "stage"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_interviews",
+        "title": "List interviews",
+        "description": "List the signed-in user's upcoming and past interviews.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "upcoming_only": {
+              "type": "boolean",
+              "description": "If true, return only interviews scheduled from now onward."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "schedule_interview",
+        "title": "Schedule interview",
+        "description": "Schedule an interview for the signed-in user, optionally linked to an application.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Interview title, e.g. 'Technical screen with Acme'."
+            },
+            "scheduled_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "ISO 8601 date-time of the interview."
+            },
+            "duration_minutes": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Duration in minutes."
+            },
+            "location": {
+              "type": "string"
+            },
+            "meeting_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "application_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Related application id."
+            }
+          },
+          "required": [
+            "title",
+            "scheduled_at"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
