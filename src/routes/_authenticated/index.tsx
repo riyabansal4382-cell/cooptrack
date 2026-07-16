@@ -701,6 +701,8 @@ function StageTimeline({ applicationId, currentStage }: { applicationId: string;
     </div>
   );
 }
+
+function Logo() {
   return (
     <div className="grid h-9 w-9 place-items-center rounded-md bg-signal text-abyss">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
