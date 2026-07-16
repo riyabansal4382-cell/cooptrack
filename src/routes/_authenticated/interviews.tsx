@@ -1,8 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { connectAppUser } from "@/integrations/lovable/appUserConnectorClient";
+import {
+  startGCalConnect,
+  saveGCalConnection,
+  getGCalStatus,
+  disconnectGCal,
+  syncInterviewToGCal,
+  deleteGCalEvent,
+  importGCalEvents,
+} from "@/lib/gcal.functions";
 
 export const Route = createFileRoute("/_authenticated/interviews")({
   head: () => ({
@@ -24,6 +35,7 @@ type Interview = {
   location: string;
   meeting_url: string;
   notes: string;
+  google_event_id?: string | null;
 };
 
 type AppLite = { id: string; company: string; role: string };
@@ -61,15 +73,102 @@ function Interviews() {
 
   const refetch = () => qc.invalidateQueries({ queryKey: ["interviews"] });
 
+  const runGetStatus = useServerFn(getGCalStatus);
+  const runStartConnect = useServerFn(startGCalConnect);
+  const runSaveConnection = useServerFn(saveGCalConnection);
+  const runDisconnect = useServerFn(disconnectGCal);
+  const runSync = useServerFn(syncInterviewToGCal);
+  const runDeleteEvent = useServerFn(deleteGCalEvent);
+  const runImport = useServerFn(importGCalEvents);
+  const [gcalBusy, setGcalBusy] = useState(false);
+
+  const { data: gcalStatus, refetch: refetchGCal } = useQuery({
+    queryKey: ["gcal-status"],
+    queryFn: () => runGetStatus({}),
+  });
+
+  const connectGCal = async () => {
+    setGcalBusy(true);
+    try {
+      const result = await connectAppUser({
+        connectorId: "google_calendar",
+        gatewayBaseUrl: "https://connector-gateway.lovable.dev",
+        start: (targetOrigin) => runStartConnect({ data: targetOrigin }),
+      });
+      if (!result.success) {
+        toast.error(result.error ?? "Connection cancelled");
+        return;
+      }
+      if (result.connectionAPIKey) {
+        await runSaveConnection({ data: { connectionAPIKey: result.connectionAPIKey } });
+      }
+      toast.success("Google Calendar connected");
+      refetchGCal();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to connect");
+    } finally {
+      setGcalBusy(false);
+    }
+  };
+
+  const disconnectGCalAction = async () => {
+    setGcalBusy(true);
+    try {
+      await runDisconnect({});
+      toast.success("Google Calendar disconnected");
+      refetchGCal();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to disconnect");
+    } finally {
+      setGcalBusy(false);
+    }
+  };
+
+  const importGCal = async () => {
+    setGcalBusy(true);
+    try {
+      const r = await runImport({ data: { days: 90 } });
+      toast.success(`Imported ${r.imported} event${r.imported === 1 ? "" : "s"} from Google Calendar`);
+      refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setGcalBusy(false);
+    }
+  };
+
   const upsert = async (i: Partial<Interview> & { id?: string }) => {
     const { data: u } = await supabase.auth.getUser();
     const user_id = u.user?.id;
     if (!user_id) return;
+
+    // Sync to Google Calendar first (if connected), so we can store the returned event id.
+    let googleEventId: string | null = i.google_event_id ?? null;
+    if (gcalStatus?.connected) {
+      try {
+        const r = await runSync({
+          data: {
+            google_event_id: googleEventId,
+            title: i.title ?? "",
+            scheduled_at: i.scheduled_at!,
+            duration_minutes: i.duration_minutes ?? 60,
+            location: i.location,
+            meeting_url: i.meeting_url,
+            notes: i.notes,
+          },
+        });
+        googleEventId = r.google_event_id;
+      } catch (e) {
+        toast.error(`Calendar sync failed: ${e instanceof Error ? e.message : "unknown error"}`);
+      }
+    }
+
     if (i.id) {
       const { error } = await supabase.from("interviews").update({
         title: i.title, scheduled_at: i.scheduled_at, duration_minutes: i.duration_minutes,
         location: i.location, meeting_url: i.meeting_url, notes: i.notes,
         application_id: i.application_id || null,
+        google_event_id: googleEventId,
       }).eq("id", i.id);
       if (error) return toast.error(error.message);
     } else {
@@ -79,14 +178,24 @@ function Interviews() {
         duration_minutes: i.duration_minutes ?? 60,
         location: i.location ?? "", meeting_url: i.meeting_url ?? "",
         notes: i.notes ?? "", application_id: i.application_id || null,
+        google_event_id: googleEventId,
       });
       if (error) return toast.error(error.message);
     }
-    toast.success("Interview saved");
+    toast.success(gcalStatus?.connected ? "Interview saved & synced" : "Interview saved");
     refetch();
   };
 
+
   const remove = async (id: string) => {
+    const iv = interviews.find((x) => x.id === id);
+    if (iv?.google_event_id && gcalStatus?.connected) {
+      try {
+        await runDeleteEvent({ data: { google_event_id: iv.google_event_id } });
+      } catch (e) {
+        toast.error(`Calendar delete failed: ${e instanceof Error ? e.message : "unknown"}`);
+      }
+    }
     const { error } = await supabase.from("interviews").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Interview removed");
@@ -154,6 +263,38 @@ function Interviews() {
             >
               ← Pipeline
             </Link>
+            {gcalStatus?.connected ? (
+              <>
+                <span className="hidden items-center gap-1.5 rounded-md border border-signal/40 bg-signal/10 px-2.5 py-1 text-[11px] uppercase tracking-widest text-signal sm:inline-flex">
+                  <span className="h-1.5 w-1.5 rounded-full bg-signal" /> Google Calendar
+                </span>
+                <button
+                  onClick={importGCal}
+                  disabled={gcalBusy}
+                  className="h-9 rounded-md border border-border bg-card/50 px-3 text-sm hover:border-steel disabled:opacity-50"
+                  title="Import upcoming events from your Google Calendar"
+                >
+                  ↓ Import
+                </button>
+                <button
+                  onClick={disconnectGCalAction}
+                  disabled={gcalBusy}
+                  className="h-9 rounded-md border border-border px-3 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  title="Disconnect Google Calendar"
+                >
+                  Disconnect Google
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={connectGCal}
+                disabled={gcalBusy}
+                className="h-9 rounded-md border border-border bg-card/50 px-3 text-sm hover:border-steel disabled:opacity-50"
+                title="Connect Google Calendar to sync interviews"
+              >
+                {gcalBusy ? "Connecting…" : "Connect Google Calendar"}
+              </button>
+            )}
             <button
               onClick={() => {
                 setCreatingDate(todayKey);

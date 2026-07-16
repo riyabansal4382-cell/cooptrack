@@ -574,6 +574,8 @@ function Editor({
               ))}
             </div>
           </Field>
+
+          {!isNew && <StageTimeline applicationId={initial.id} currentStage={draft.stage} />}
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-2">
@@ -605,6 +607,98 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1 block text-[11px] uppercase tracking-[0.15em] text-muted-foreground">{label}</span>
       {children}
     </label>
+  );
+}
+
+const STAGE_LABEL: Record<Stage, string> = {
+  applied: "Applied",
+  phone_screen: "Phone Screen",
+  interview: "Interview",
+  offer: "Offer",
+  rejected: "Rejected",
+  accepted: "Accepted",
+};
+
+function StageTimeline({ applicationId, currentStage }: { applicationId: string; currentStage: Stage }) {
+  const { data: history = [], isLoading } = useQuery({
+    queryKey: ["stage-history", applicationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("application_stage_history")
+        .select("id, from_stage, to_stage, changed_at")
+        .eq("application_id", applicationId)
+        .order("changed_at", { ascending: true });
+      if (error) throw error;
+      return data as {
+        id: string;
+        from_stage: Stage | null;
+        to_stage: Stage;
+        changed_at: string;
+      }[];
+    },
+  });
+
+  const fmt = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit",
+    });
+  };
+
+  const daysBetween = (a: string, b: string) =>
+    Math.round(Math.abs(+new Date(b) - +new Date(a)) / (24 * 3600 * 1000));
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-abyss/40 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground">Stage timeline</span>
+        {history.length > 1 && (
+          <span className="text-[10px] text-muted-foreground">
+            {daysBetween(history[0].changed_at, history[history.length - 1].changed_at)}d total
+          </span>
+        )}
+      </div>
+      {isLoading ? (
+        <div className="text-xs text-muted-foreground">Loading…</div>
+      ) : history.length === 0 ? (
+        <div className="text-xs text-muted-foreground">No history yet.</div>
+      ) : (
+        <ol className="relative space-y-2 border-l border-border/60 pl-4">
+          {history.map((h, i) => {
+            const isCurrent = i === history.length - 1 && h.to_stage === currentStage;
+            const next = history[i + 1];
+            const dwell = next ? daysBetween(h.changed_at, next.changed_at) : null;
+            return (
+              <li key={h.id} className="relative">
+                <span
+                  className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 ${
+                    isCurrent
+                      ? "border-signal bg-signal"
+                      : "border-border bg-abyss"
+                  }`}
+                />
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-xs font-medium text-foreground">
+                    {h.from_stage
+                      ? `${STAGE_LABEL[h.from_stage]} → ${STAGE_LABEL[h.to_stage]}`
+                      : `Added as ${STAGE_LABEL[h.to_stage]}`}
+                  </span>
+                  <span className="shrink-0 text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {fmt(h.changed_at)}
+                  </span>
+                </div>
+                {dwell != null && (
+                  <div className="text-[10px] text-muted-foreground">
+                    Stayed {dwell} day{dwell === 1 ? "" : "s"}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </div>
   );
 }
 
