@@ -53,9 +53,4 @@ export default defineTool({
       structuredContent: { application: data },
     };
   },
-    return {
-      content: [{ type: "text", text: `Created application ${data.id} at ${data.company}.` }],
-      structuredContent: { application: data },
-    };
-  },
 });
