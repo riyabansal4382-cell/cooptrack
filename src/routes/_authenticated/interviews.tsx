@@ -73,10 +73,6 @@ function Interviews() {
 
   const refetch = () => qc.invalidateQueries({ queryKey: ["interviews"] });
 
-  const { data: gcalStatus, refetch: refetchGCal } = useQuery({
-    queryKey: ["gcal-status"],
-    queryFn: () => runGetStatus(),
-  });
   const runGetStatus = useServerFn(getGCalStatus);
   const runStartConnect = useServerFn(startGCalConnect);
   const runSaveConnection = useServerFn(saveGCalConnection);
@@ -85,6 +81,11 @@ function Interviews() {
   const runDeleteEvent = useServerFn(deleteGCalEvent);
   const runImport = useServerFn(importGCalEvents);
   const [gcalBusy, setGcalBusy] = useState(false);
+
+  const { data: gcalStatus, refetch: refetchGCal } = useQuery({
+    queryKey: ["gcal-status"],
+    queryFn: () => runGetStatus({}),
+  });
 
   const connectGCal = async () => {
     setGcalBusy(true);
