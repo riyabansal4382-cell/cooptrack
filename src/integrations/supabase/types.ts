@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_user_connections: {
+        Row: {
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connection_key_ciphertext?: string
+          connector_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      application_stage_history: {
+        Row: {
+          application_id: string
+          changed_at: string
+          from_stage: Database["public"]["Enums"]["application_stage"] | null
+          id: string
+          to_stage: Database["public"]["Enums"]["application_stage"]
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          changed_at?: string
+          from_stage?: Database["public"]["Enums"]["application_stage"] | null
+          id?: string
+          to_stage: Database["public"]["Enums"]["application_stage"]
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          changed_at?: string
+          from_stage?: Database["public"]["Enums"]["application_stage"] | null
+          id?: string
+          to_stage?: Database["public"]["Enums"]["application_stage"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_stage_history_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           company: string
@@ -67,6 +129,7 @@ export type Database = {
           application_id: string | null
           created_at: string
           duration_minutes: number
+          google_event_id: string | null
           id: string
           location: string
           meeting_url: string
@@ -80,6 +143,7 @@ export type Database = {
           application_id?: string | null
           created_at?: string
           duration_minutes?: number
+          google_event_id?: string | null
           id?: string
           location?: string
           meeting_url?: string
@@ -93,6 +157,7 @@ export type Database = {
           application_id?: string | null
           created_at?: string
           duration_minutes?: number
+          google_event_id?: string | null
           id?: string
           location?: string
           meeting_url?: string
