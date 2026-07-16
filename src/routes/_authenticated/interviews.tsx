@@ -187,6 +187,14 @@ function Interviews() {
 
 
   const remove = async (id: string) => {
+    const iv = interviews.find((x) => x.id === id);
+    if (iv?.google_event_id && gcalStatus?.connected) {
+      try {
+        await runDeleteEvent({ data: { google_event_id: iv.google_event_id } });
+      } catch (e) {
+        toast.error(`Calendar delete failed: ${e instanceof Error ? e.message : "unknown"}`);
+      }
+    }
     const { error } = await supabase.from("interviews").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Interview removed");
@@ -254,6 +262,38 @@ function Interviews() {
             >
               ← Pipeline
             </Link>
+            {gcalStatus?.connected ? (
+              <>
+                <span className="hidden items-center gap-1.5 rounded-md border border-signal/40 bg-signal/10 px-2.5 py-1 text-[11px] uppercase tracking-widest text-signal sm:inline-flex">
+                  <span className="h-1.5 w-1.5 rounded-full bg-signal" /> Google Calendar
+                </span>
+                <button
+                  onClick={importGCal}
+                  disabled={gcalBusy}
+                  className="h-9 rounded-md border border-border bg-card/50 px-3 text-sm hover:border-steel disabled:opacity-50"
+                  title="Import upcoming events from your Google Calendar"
+                >
+                  ↓ Import
+                </button>
+                <button
+                  onClick={disconnectGCalAction}
+                  disabled={gcalBusy}
+                  className="h-9 rounded-md border border-border px-3 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  title="Disconnect Google Calendar"
+                >
+                  Disconnect Google
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={connectGCal}
+                disabled={gcalBusy}
+                className="h-9 rounded-md border border-border bg-card/50 px-3 text-sm hover:border-steel disabled:opacity-50"
+                title="Connect Google Calendar to sync interviews"
+              >
+                {gcalBusy ? "Connecting…" : "Connect Google Calendar"}
+              </button>
+            )}
             <button
               onClick={() => {
                 setCreatingDate(todayKey);
