@@ -34,10 +34,25 @@ export default defineTool({
     }
     const { data, error } = await supabaseForUser(ctx)
       .from("applications")
-      .insert({ ...input, user_id: ctx.getUserId() })
+      .insert({
+        user_id: ctx.getUserId(),
+        company: input.company,
+        role: input.role,
+        location: input.location,
+        remote_type: input.remote_type,
+        salary: input.salary,
+        rating: input.rating,
+        stage: input.stage,
+        notes: input.notes,
+      })
       .select()
       .single();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: `Created application ${data.id} at ${data.company}.` }],
+      structuredContent: { application: data },
+    };
+  },
     return {
       content: [{ type: "text", text: `Created application ${data.id} at ${data.company}.` }],
       structuredContent: { application: data },

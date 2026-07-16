@@ -30,7 +30,16 @@ export default defineTool({
     }
     const { data, error } = await supabaseForUser(ctx)
       .from("interviews")
-      .insert({ ...input, user_id: ctx.getUserId() })
+      .insert({
+        user_id: ctx.getUserId(),
+        title: input.title,
+        scheduled_at: input.scheduled_at,
+        duration_minutes: input.duration_minutes,
+        location: input.location,
+        meeting_url: input.meeting_url,
+        notes: input.notes,
+        application_id: input.application_id,
+      })
       .select()
       .single();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
