@@ -73,15 +73,101 @@ function Interviews() {
 
   const refetch = () => qc.invalidateQueries({ queryKey: ["interviews"] });
 
+  const { data: gcalStatus, refetch: refetchGCal } = useQuery({
+    queryKey: ["gcal-status"],
+    queryFn: () => runGetStatus(),
+  });
+  const runGetStatus = useServerFn(getGCalStatus);
+  const runStartConnect = useServerFn(startGCalConnect);
+  const runSaveConnection = useServerFn(saveGCalConnection);
+  const runDisconnect = useServerFn(disconnectGCal);
+  const runSync = useServerFn(syncInterviewToGCal);
+  const runDeleteEvent = useServerFn(deleteGCalEvent);
+  const runImport = useServerFn(importGCalEvents);
+  const [gcalBusy, setGcalBusy] = useState(false);
+
+  const connectGCal = async () => {
+    setGcalBusy(true);
+    try {
+      const result = await connectAppUser({
+        connectorId: "google_calendar",
+        gatewayBaseUrl: "https://connector-gateway.lovable.dev",
+        start: (targetOrigin) => runStartConnect({ data: targetOrigin }),
+      });
+      if (!result.success) {
+        toast.error(result.error ?? "Connection cancelled");
+        return;
+      }
+      if (result.connectionAPIKey) {
+        await runSaveConnection({ data: { connectionAPIKey: result.connectionAPIKey } });
+      }
+      toast.success("Google Calendar connected");
+      refetchGCal();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to connect");
+    } finally {
+      setGcalBusy(false);
+    }
+  };
+
+  const disconnectGCalAction = async () => {
+    setGcalBusy(true);
+    try {
+      await runDisconnect({});
+      toast.success("Google Calendar disconnected");
+      refetchGCal();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to disconnect");
+    } finally {
+      setGcalBusy(false);
+    }
+  };
+
+  const importGCal = async () => {
+    setGcalBusy(true);
+    try {
+      const r = await runImport({ data: { days: 90 } });
+      toast.success(`Imported ${r.imported} event${r.imported === 1 ? "" : "s"} from Google Calendar`);
+      refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setGcalBusy(false);
+    }
+  };
+
   const upsert = async (i: Partial<Interview> & { id?: string }) => {
     const { data: u } = await supabase.auth.getUser();
     const user_id = u.user?.id;
     if (!user_id) return;
+
+    // Sync to Google Calendar first (if connected), so we can store the returned event id.
+    let googleEventId: string | null = i.google_event_id ?? null;
+    if (gcalStatus?.connected) {
+      try {
+        const r = await runSync({
+          data: {
+            google_event_id: googleEventId,
+            title: i.title ?? "",
+            scheduled_at: i.scheduled_at!,
+            duration_minutes: i.duration_minutes ?? 60,
+            location: i.location,
+            meeting_url: i.meeting_url,
+            notes: i.notes,
+          },
+        });
+        googleEventId = r.google_event_id;
+      } catch (e) {
+        toast.error(`Calendar sync failed: ${e instanceof Error ? e.message : "unknown error"}`);
+      }
+    }
+
     if (i.id) {
       const { error } = await supabase.from("interviews").update({
         title: i.title, scheduled_at: i.scheduled_at, duration_minutes: i.duration_minutes,
         location: i.location, meeting_url: i.meeting_url, notes: i.notes,
         application_id: i.application_id || null,
+        google_event_id: googleEventId,
       }).eq("id", i.id);
       if (error) return toast.error(error.message);
     } else {
@@ -91,12 +177,14 @@ function Interviews() {
         duration_minutes: i.duration_minutes ?? 60,
         location: i.location ?? "", meeting_url: i.meeting_url ?? "",
         notes: i.notes ?? "", application_id: i.application_id || null,
+        google_event_id: googleEventId,
       });
       if (error) return toast.error(error.message);
     }
-    toast.success("Interview saved");
+    toast.success(gcalStatus?.connected ? "Interview saved & synced" : "Interview saved");
     refetch();
   };
+
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("interviews").delete().eq("id", id);
