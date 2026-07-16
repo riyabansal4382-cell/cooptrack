@@ -574,6 +574,8 @@ function Editor({
               ))}
             </div>
           </Field>
+
+          {!isNew && <StageTimeline applicationId={initial.id} currentStage={draft.stage} />}
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-2">
