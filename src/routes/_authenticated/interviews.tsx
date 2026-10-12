@@ -237,7 +237,7 @@ function Interviews() {
   const signOut = async () => {
     await qc.cancelQueries(); qc.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", replace: true, search: { next: undefined } });
   };
 
   const monthLabel = month.toLocaleString(undefined, { month: "long", year: "numeric" });
