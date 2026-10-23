@@ -83,6 +83,7 @@ export type Database = {
           id: string
           location: string
           notes: string
+          qualifications: string
           rating: number
           remote_type: Database["public"]["Enums"]["remote_type"]
           role: string
@@ -98,6 +99,7 @@ export type Database = {
           id?: string
           location?: string
           notes?: string
+          qualifications?: string
           rating?: number
           remote_type?: Database["public"]["Enums"]["remote_type"]
           role: string
@@ -113,6 +115,7 @@ export type Database = {
           id?: string
           location?: string
           notes?: string
+          qualifications?: string
           rating?: number
           remote_type?: Database["public"]["Enums"]["remote_type"]
           role?: string
