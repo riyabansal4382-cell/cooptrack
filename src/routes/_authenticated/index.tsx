@@ -31,6 +31,7 @@ type Application = {
   salary: string;
   salary_amount: number | null;
   notes: string;
+  qualifications?: string;
   rating: number;
   stage: Stage;
   remote_type: Remote;
@@ -108,7 +109,7 @@ function Index() {
         .from("applications")
         .update({
           company: a.company, role: a.role, location: a.location, salary: a.salary,
-          salary_amount, notes: a.notes, rating: a.rating, stage: a.stage, remote_type: a.remote_type,
+          salary_amount, notes: a.notes, qualifications: a.qualifications, rating: a.rating, stage: a.stage, remote_type: a.remote_type,
         })
         .eq("id", a.id);
       if (error) { toast.error(error.message); return; }
@@ -117,7 +118,7 @@ function Index() {
         user_id,
         company: a.company ?? "", role: a.role ?? "", location: a.location ?? "",
         salary: a.salary ?? "", salary_amount,
-        notes: a.notes ?? "", rating: a.rating ?? 0,
+        notes: a.notes ?? "", qualifications: a.qualifications ?? "", rating: a.rating ?? 0,
         stage: a.stage ?? "applied", remote_type: a.remote_type ?? "onsite",
       });
       if (error) { toast.error(error.message); return; }
@@ -391,6 +392,13 @@ function Card({
           <span className="rounded bg-navy/70 px-1.5 py-0.5 font-medium text-frost/90">{app.salary}</span>
         )}
       </div>
+      {app.qualifications?.trim() && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {app.qualifications.split(/\n|,/).map((q) => q.trim()).filter(Boolean).slice(0, 4).map((q) => (
+            <span key={q} className="rounded border border-steel/40 px-1.5 py-0.5 text-[10px] text-frost/80">{q}</span>
+          ))}
+        </div>
+      )}
       {app.notes && (
         <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-muted-foreground/90">{app.notes}</p>
       )}
@@ -551,6 +559,13 @@ function Editor({
               <Stars value={draft.rating} onChange={(n) => set("rating", n)} />
               <span className="text-xs text-muted-foreground">{draft.rating} / 5</span>
             </div>
+          </Field>
+
+          <Field label="Specialized qualifications">
+            <textarea value={draft.qualifications ?? ""} onChange={(e) => set("qualifications", e.target.value)}
+              placeholder="One per line — e.g. Python, AWS certification, security clearance"
+              rows={3}
+              className="w-full resize-y rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:border-steel focus:outline-none" />
           </Field>
 
           <Field label="Notes">
