@@ -97,6 +97,7 @@ function Index() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<Stage | null>(null);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [aiFor, setAiFor] = useState<Application | null>(null);
 
   const refetch = () => qc.invalidateQueries({ queryKey: ["applications"] });
 
@@ -147,7 +148,7 @@ function Index() {
   // Space = new application
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (editing || creating || compareOpen) return;
+      if (editing || creating || compareOpen || aiFor) return;
       const t = e.target as HTMLElement | null;
       const tag = t?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || t?.isContentEditable) return;
@@ -155,7 +156,7 @@ function Index() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [editing, creating, compareOpen]);
+  }, [editing, creating, compareOpen, aiFor]);
 
   const grouped = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -293,6 +294,7 @@ function Index() {
                         key={a.id}
                         app={a}
                         onOpen={() => setEditing(a)}
+                        onAi={() => setAiFor(a)}
                         onDragStart={() => setDragId(a.id)}
                         onDragEnd={() => setDragId(null)}
                       />
@@ -338,6 +340,14 @@ function Index() {
       )}
 
       {compareOpen && <CompareModal apps={apps} onClose={() => setCompareOpen(false)} />}
+
+      {aiFor && (
+        <AiFillModal
+          app={aiFor}
+          onClose={() => setAiFor(null)}
+          onSave={async (a) => { await upsert(a); }}
+        />
+      )}
     </div>
   );
 }
@@ -353,8 +363,8 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: "ac
 }
 
 function Card({
-  app, onOpen, onDragStart, onDragEnd,
-}: { app: Application; onOpen: () => void; onDragStart: () => void; onDragEnd: () => void }) {
+  app, onOpen, onAi, onDragStart, onDragEnd,
+}: { app: Application; onOpen: () => void; onAi: () => void; onDragStart: () => void; onDragEnd: () => void }) {
   const rem = REMOTE_META[app.remote_type];
   return (
     <article
@@ -370,7 +380,14 @@ function Card({
           <h3 className="truncate font-display text-sm font-semibold tracking-tight text-foreground">{app.company || "Untitled"}</h3>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">{app.role || "—"}</p>
         </div>
-        <Stars value={app.rating} readOnly />
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); onAi(); }}
+            className="rounded border border-steel/40 px-1.5 py-0.5 text-[10px] text-steel transition hover:bg-steel/10"
+            title="AI summarizer — paste a job description to fill this card"
+          >✨ AI</button>
+          <Stars value={app.rating} readOnly />
+        </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
         <span
