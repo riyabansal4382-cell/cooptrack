@@ -80,6 +80,7 @@ export type Database = {
         Row: {
           company: string
           created_at: string
+          hours_per_week: number | null
           id: string
           location: string
           notes: string
@@ -96,6 +97,7 @@ export type Database = {
         Insert: {
           company: string
           created_at?: string
+          hours_per_week?: number | null
           id?: string
           location?: string
           notes?: string
@@ -112,6 +114,7 @@ export type Database = {
         Update: {
           company?: string
           created_at?: string
+          hours_per_week?: number | null
           id?: string
           location?: string
           notes?: string
