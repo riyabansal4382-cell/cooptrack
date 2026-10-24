@@ -1,0 +1,1 @@
+ALTER TABLE public.applications ADD COLUMN hours_per_week numeric;

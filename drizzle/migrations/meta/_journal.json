@@ -8,6 +8,13 @@
       "when": 1792764881421,
       "tag": "0000_add_qualifications",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792810057770,
+      "tag": "0001_add_hours_per_week",
+      "breakpoints": true
     }
   ]
 }

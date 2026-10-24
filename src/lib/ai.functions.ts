@@ -11,6 +11,7 @@ type Summary = {
   location: string;
   remote_type: "remote" | "onsite" | "hybrid";
   salary: string;
+  hours_per_week: number | null;
   summary: string;
 };
 
@@ -32,7 +33,7 @@ export const summarizeJD = createServerFn({ method: "POST" })
           {
             role: "system",
             content:
-              "Extract structured info from a job/co-op description. Reply ONLY with valid JSON matching the schema: {role, company, location, remote_type (one of remote|onsite|hybrid), salary, summary}. Keep summary under 240 chars. Use empty string if a field is missing.",
+              "Extract structured info from a job/co-op description. Reply ONLY with valid JSON matching the schema: {role, company, location, remote_type (one of remote|onsite|hybrid), salary, hours_per_week (number of hours per week the role requires, or null), summary}. Keep summary under 240 chars. Use empty string if a field is missing.",
           },
           { role: "user", content: data.jobDescription },
         ],
@@ -54,12 +55,14 @@ export const summarizeJD = createServerFn({ method: "POST" })
     }
 
     const remote = (parsed.remote_type as string)?.toLowerCase();
+    const hrs = Number(parsed.hours_per_week);
     return {
       role: parsed.role ?? "",
       company: parsed.company ?? "",
       location: parsed.location ?? "",
       remote_type: remote === "remote" || remote === "hybrid" ? remote : "onsite",
       salary: parsed.salary ?? "",
+      hours_per_week: Number.isFinite(hrs) && hrs > 0 && hrs <= 80 ? hrs : null,
       summary: parsed.summary ?? "",
     };
   });
