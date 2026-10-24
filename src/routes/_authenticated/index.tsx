@@ -32,6 +32,7 @@ type Application = {
   salary_amount: number | null;
   notes: string;
   qualifications?: string;
+  hours_per_week?: number | null;
   rating: number;
   stage: Stage;
   remote_type: Remote;
@@ -110,6 +111,7 @@ function Index() {
         .update({
           company: a.company, role: a.role, location: a.location, salary: a.salary,
           salary_amount, notes: a.notes, qualifications: a.qualifications, rating: a.rating, stage: a.stage, remote_type: a.remote_type,
+          hours_per_week: a.hours_per_week ?? null,
         })
         .eq("id", a.id);
       if (error) { toast.error(error.message); return; }
@@ -120,6 +122,7 @@ function Index() {
         salary: a.salary ?? "", salary_amount,
         notes: a.notes ?? "", qualifications: a.qualifications ?? "", rating: a.rating ?? 0,
         stage: a.stage ?? "applied", remote_type: a.remote_type ?? "onsite",
+        hours_per_week: a.hours_per_week ?? null,
       });
       if (error) { toast.error(error.message); return; }
     }
@@ -320,7 +323,7 @@ function Index() {
               id: "",
               user_id: "",
               company: "", role: "", location: "", salary: "", salary_amount: null,
-              notes: "", rating: 3, stage: creating!, remote_type: "onsite",
+              notes: "", rating: 3, stage: creating!, remote_type: "onsite", hours_per_week: null,
               created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
             }
           }
@@ -390,6 +393,11 @@ function Card({
         )}
         {app.salary && (
           <span className="rounded bg-navy/70 px-1.5 py-0.5 font-medium text-frost/90">{app.salary}</span>
+        )}
+        {app.hours_per_week != null && app.hours_per_week > 0 && (
+          <span className="rounded bg-navy/70 px-1.5 py-0.5 font-medium text-frost/90" title="Hours per week">
+            {app.hours_per_week} hrs/wk
+          </span>
         )}
       </div>
       {app.qualifications?.trim() && (
@@ -469,6 +477,7 @@ function Editor({
         location: r.location || d.location,
         salary: r.salary || d.salary,
         remote_type: r.remote_type || d.remote_type,
+        hours_per_week: r.hours_per_week ?? d.hours_per_week,
         notes: r.summary ? (d.notes ? d.notes + "\n\n" + r.summary : r.summary) : d.notes,
       }));
       toast.success("Filled from description");
@@ -504,7 +513,7 @@ function Editor({
             <textarea
               value={jd}
               onChange={(e) => setJd(e.target.value)}
-              placeholder="Paste a job description here — I'll fill in company, role, location, salary, remote type, and a short summary."
+              placeholder="Paste a job description here — I'll fill in company, role, location, salary, hours per week, remote type, and a short summary."
               rows={3}
               className="w-full resize-y rounded-md border border-border bg-input/40 px-2.5 py-2 text-xs focus:border-steel focus:outline-none"
             />
@@ -535,6 +544,23 @@ function Editor({
             </Field>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Hours per week">
+              <input
+                type="number" min={0} max={80} step={0.5}
+                value={draft.hours_per_week ?? ""}
+                onChange={(e) => set("hours_per_week", e.target.value === "" ? null : Number(e.target.value))}
+                placeholder="e.g. 40"
+                className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:border-steel focus:outline-none" />
+            </Field>
+            <Field label="Rating">
+              <div className="flex items-center gap-3">
+                <Stars value={draft.rating} onChange={(n) => set("rating", n)} />
+                <span className="text-xs text-muted-foreground">{draft.rating} / 5</span>
+              </div>
+            </Field>
+          </div>
+
           <Field label="Work type">
             <div className="flex gap-1.5">
               {(Object.keys(REMOTE_META) as Remote[]).map((r) => (
@@ -554,12 +580,6 @@ function Editor({
             </div>
           </Field>
 
-          <Field label="Rating">
-            <div className="flex items-center gap-3">
-              <Stars value={draft.rating} onChange={(n) => set("rating", n)} />
-              <span className="text-xs text-muted-foreground">{draft.rating} / 5</span>
-            </div>
-          </Field>
 
           <Field label="Specialized qualifications">
             <textarea value={draft.qualifications ?? ""} onChange={(e) => set("qualifications", e.target.value)}
@@ -914,7 +934,7 @@ function ExportImport({ apps, onImported }: { apps: Application[]; onImported: (
   };
 
   const exportCsv = () => {
-    const cols = ["company", "role", "location", "remote_type", "salary", "rating", "stage", "notes", "created_at"] as const;
+    const cols = ["company", "role", "location", "remote_type", "salary", "hours_per_week", "rating", "stage", "notes", "created_at"] as const;
     const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const rows = [cols.join(","), ...apps.map((a) => cols.map((c) => esc((a as Record<string, unknown>)[c])).join(","))];
     download(`cooptrack-${Date.now()}.csv`, rows.join("\n"), "text/csv");
@@ -958,6 +978,7 @@ function ExportImport({ apps, onImported }: { apps: Application[]; onImported: (
       rating: Number(r.rating ?? 0) || 0,
       stage: (r.stage as Stage) ?? "applied",
       remote_type: (r.remote_type as Remote) ?? "onsite",
+      hours_per_week: r.hours_per_week == null || String(r.hours_per_week).trim() === "" ? null : Number(r.hours_per_week),
     })).filter((r) => r.company);
 
     if (!payload.length) { toast.error("No valid rows found"); return; }
