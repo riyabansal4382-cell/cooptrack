@@ -449,6 +449,122 @@ function Stars({ value, readOnly, onChange }: { value: number; readOnly?: boolea
   );
 }
 
+type AiSummary = {
+  role: string;
+  company: string;
+  location: string;
+  remote_type: "remote" | "onsite" | "hybrid";
+  salary: string;
+  hours_per_week: number | null;
+  summary: string;
+};
+
+function AiFillModal({
+  app, onClose, onSave,
+}: {
+  app: Application;
+  onClose: () => void;
+  onSave: (a: Application) => void | Promise<void>;
+}) {
+  const [jd, setJd] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<AiSummary | null>(null);
+  const runSummarize = useServerFn(summarizeJD);
+
+  const doSummarize = async () => {
+    if (jd.trim().length < 20) { toast.error("Paste a longer description first."); return; }
+    setBusy(true);
+    try {
+      setResult(await runSummarize({ data: { jobDescription: jd } }));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const apply = async () => {
+    if (!result) return;
+    await onSave({
+      ...app,
+      company: result.company || app.company,
+      role: result.role || app.role,
+      location: result.location || app.location,
+      salary: result.salary || app.salary,
+      remote_type: result.remote_type || app.remote_type,
+      hours_per_week: result.hours_per_week ?? app.hours_per_week,
+      notes: result.summary ? (app.notes ? app.notes + "\n\n" + result.summary : result.summary) : app.notes,
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-abyss/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold tracking-tight">✨ AI summarizer</h2>
+          <button onClick={onClose} className="rounded p-1 text-muted-foreground hover:text-foreground" aria-label="Close">✕</button>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          For <span className="font-medium text-foreground">{app.company || "Untitled"}</span> — paste a job description and the AI will update this card's details and append a summary to its notes.
+        </p>
+
+        <div className="mt-4 rounded-lg border border-steel/40 bg-steel/5 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-[0.15em] text-steel">Job description</span>
+            <button
+              onClick={doSummarize}
+              disabled={busy}
+              className="rounded-md bg-steel px-2.5 py-1 text-xs font-medium text-abyss transition hover:bg-steel/85 disabled:opacity-50"
+            >
+              {busy ? "Summarizing…" : "Summarize"}
+            </button>
+          </div>
+          <textarea
+            autoFocus
+            value={jd}
+            onChange={(e) => setJd(e.target.value)}
+            placeholder="Paste a job description here — I'll fill in company, role, location, salary, hours per week, remote type, and a short summary."
+            rows={4}
+            className="w-full resize-y rounded-md border border-border bg-input/40 px-2.5 py-2 text-xs focus:border-steel focus:outline-none"
+          />
+        </div>
+
+        {result && (
+          <div className="mt-4 space-y-1.5 rounded-lg border border-border bg-input/30 p-3 text-xs">
+            <div className="mb-1 text-[11px] uppercase tracking-[0.15em] text-steel">Extracted</div>
+            <Row label="Company" value={result.company} fallback={app.company} />
+            <Row label="Role" value={result.role} fallback={app.role} />
+            <Row label="Location" value={result.location} fallback={app.location} />
+            <Row label="Salary" value={result.salary} fallback={app.salary} />
+            <Row label="Remote" value={result.remote_type ? REMOTE_META[result.remote_type].label : ""} fallback={REMOTE_META[app.remote_type].label} />
+            <Row label="Hours / week" value={result.hours_per_week != null ? String(result.hours_per_week) : ""} fallback={app.hours_per_week != null ? String(app.hours_per_week) : ""} />
+            {result.summary && <p className="mt-1 rounded bg-navy/50 p-2 text-[11px] leading-snug text-frost/90">{result.summary}</p>}
+          </div>
+        )}
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Close</button>
+          <button
+            onClick={apply}
+            disabled={!result}
+            className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-abyss transition hover:bg-signal/85 disabled:opacity-50"
+          >Apply to card</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value, fallback }: { label: string; value: string; fallback: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right font-medium text-foreground">{value || fallback || "—"}</span>
+    </div>
+  );
+}
+
 function Editor({
   initial, isNew, onClose, onSave, onDelete,
 }: {
